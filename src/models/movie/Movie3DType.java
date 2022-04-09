@@ -1,4 +1,4 @@
-package models.booking;
+package models.movie;
 
 public enum Movie3DType {
     REGULAR,

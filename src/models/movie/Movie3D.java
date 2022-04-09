@@ -1,4 +1,4 @@
 package models.movie;
 
-public interface Movie3D {
+public class Movie3D {
 }
