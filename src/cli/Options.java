@@ -12,9 +12,11 @@ public enum Options {
     DELETE_ROOM,
     ADD_SCHEDULING,
     START_MOVIE,
+    FINISH_MOVIE,
     /**
      * All unclaimed bookings are deleted and those seats can be used
      * No more bookings allowed for this run
      */
-    STOP_BOOKING
+    STOP_BOOKING,
+    GET_MOVIE_DETAILS
 }

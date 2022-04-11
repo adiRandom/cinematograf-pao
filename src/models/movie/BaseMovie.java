@@ -10,8 +10,12 @@ public abstract class BaseMovie implements Movie {
     private final LinkedList<String> starActors;
     private final int rating;
     private final String studio;
+    private final int duration;
+    private final int id;
 
-    public BaseMovie(String title, LinkedList<String> starActors, int rating, String studio) throws InvalidArgumentException {
+    private static int nextId = 0;
+
+    public BaseMovie(String title, LinkedList<String> starActors, int rating, String studio, int duration) throws InvalidArgumentException {
 
         if (rating > 10 || rating < 0) {
             throw new InvalidArgumentException(new String[]{"Rating needs to be an integer between 0 and 10"});
@@ -21,6 +25,8 @@ public abstract class BaseMovie implements Movie {
         this.starActors = starActors;
         this.rating = rating;
         this.studio = studio;
+        this.duration = duration;
+        this.id = BaseMovie.nextId++;
     }
 
     @Override
@@ -41,5 +47,15 @@ public abstract class BaseMovie implements Movie {
     @Override
     public String getStudio() {
         return studio;
+    }
+
+    @Override
+    public int getDuration() {
+        return duration;
+    }
+
+    @Override
+    public int getId() {
+        return id;
     }
 }

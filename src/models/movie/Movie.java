@@ -12,4 +12,11 @@ public interface Movie {
     String getStudio();
 
     int getType();
+
+    /**
+     * Get duration of the movie in minutes
+     */
+    int getDuration();
+
+    int getId();
 }

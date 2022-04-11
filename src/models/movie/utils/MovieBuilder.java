@@ -1,5 +1,6 @@
 package models.movie.utils;
 
+import com.sun.javaws.exceptions.InvalidArgumentException;
 import models.movie.*;
 
 import java.util.LinkedList;
@@ -11,6 +12,7 @@ public class MovieBuilder {
     private String studio;
     private boolean is3D;
     private String type;
+    private int duration;
 
     public MovieBuilder() {
         this.clear();
@@ -46,15 +48,20 @@ public class MovieBuilder {
         return this;
     }
 
-    public BaseMovie build() {
+    public MovieBuilder withDuration(int duration) {
+        this.duration = duration;
+        return this;
+    }
+
+    public BaseMovie build() throws InvalidArgumentException {
         if (is3D) {
-            return new Movie3D(this.title, this.starActors, this.rating, this.studio, Movie3DType.valueOf(this.type));
+            return new Movie3D(this.title, this.starActors, this.rating, this.studio, this.duration, Movie3DType.valueOf(this.type));
         } else {
-            return new Movie2D(this.title, this.starActors, this.rating, this.studio, Movie2DType.valueOf(this.type));
+            return new Movie2D(this.title, this.starActors, this.rating, this.studio, this.duration, Movie2DType.valueOf(this.type));
         }
     }
 
-    public void clear(){
+    public void clear() {
         this.title = "";
         this.starActors = new LinkedList<>();
         this.rating = 0;
