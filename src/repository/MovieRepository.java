@@ -1,4 +1,21 @@
 package repository;
 
-public class MovieRepository {
+import models.movie.Movie;
+
+public class MovieRepository extends BaseRepository<Movie> {
+
+    private static MovieRepository instance = null;
+
+    private MovieRepository() {
+        super();
+    }
+
+    public static MovieRepository getInstance() {
+        if (instance == null) {
+            instance = new MovieRepository();
+        }
+
+        return instance;
+    }
+
 }

@@ -6,10 +6,12 @@ public class Room {
     private ArrayList<ArrayList<Seat>> seats = null;
     private final int rows;
     private final int columns;
+    private final RoomType type;
 
-    Room(int rows, int columns) {
+    Room(int rows, int columns, RoomType type) {
         this.rows = rows;
         this.columns = columns;
+        this.type = type;
         this.seats = new ArrayList<>(rows);
         for (int i = 0; i < rows; i++) {
             ArrayList<Seat> row = new ArrayList<Seat>(columns);
@@ -20,8 +22,9 @@ public class Room {
         }
     }
 
-    Room(ArrayList<ArrayList<Seat>> seats) {
+    Room(ArrayList<ArrayList<Seat>> seats, RoomType type) {
         this.seats = seats;
+        this.type = type;
         this.rows = this.seats.size();
         this.columns = this.seats.get(0).size();
     }

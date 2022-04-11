@@ -1,6 +1,9 @@
 package models.room;
 
 public enum RoomType {
-    REGULAR,
-    ROOM_4DX
+    REGULAR_2D,
+    REGULAR_3D,
+    IMAX,
+    ROOM_4DX,
+    ROOM_4DX_3D
 }
