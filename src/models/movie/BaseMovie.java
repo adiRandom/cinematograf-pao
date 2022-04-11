@@ -1,5 +1,7 @@
 package models.movie;
 
+import com.sun.javaws.exceptions.InvalidArgumentException;
+
 import java.util.LinkedList;
 
 public abstract class BaseMovie implements Movie {
@@ -9,7 +11,12 @@ public abstract class BaseMovie implements Movie {
     private final int rating;
     private final String studio;
 
-    public BaseMovie(String title, LinkedList<String> starActors, int rating, String studio) {
+    public BaseMovie(String title, LinkedList<String> starActors, int rating, String studio) throws InvalidArgumentException {
+
+        if (rating > 10 || rating < 0) {
+            throw new InvalidArgumentException(new String[]{"Rating needs to be an integer between 0 and 10"});
+        }
+
         this.title = title;
         this.starActors = starActors;
         this.rating = rating;
