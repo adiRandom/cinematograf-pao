@@ -11,7 +11,7 @@ public interface Movie {
 
     String getStudio();
 
-    int getType();
+    String getType();
 
     /**
      * Get duration of the movie in minutes

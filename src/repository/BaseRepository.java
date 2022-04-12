@@ -1,6 +1,11 @@
 package repository;
 
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class BaseRepository<T> implements Repository<T> {
 
@@ -18,5 +23,23 @@ public class BaseRepository<T> implements Repository<T> {
     @Override
     public void insertItem(int id, T item) {
         this.repo.put(id, item);
+    }
+
+    @Override
+    public T where(Predicate<T> predicate) {
+
+        Optional<Map.Entry<Integer, T>> optionalResult = repo.entrySet()
+                .stream()
+                .filter(entry -> predicate.test(entry.getValue()))
+                .findFirst();
+        return optionalResult.map(Map.Entry::getValue).orElse(null);
+    }
+
+    @Override
+    public List<T> whereAll(Predicate<T> predicate) {
+        return repo.entrySet()
+                .stream()
+                .filter(entry -> predicate.test(entry.getValue())).map(Map.Entry::getValue).collect(Collectors.toList());
+
     }
 }

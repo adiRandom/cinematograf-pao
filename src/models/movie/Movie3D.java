@@ -14,7 +14,7 @@ public class Movie3D extends BaseMovie {
     }
 
     @Override
-    public int getType() {
-        return this.type.ordinal();
+    public String getType() {
+        return this.type.name();
     }
 }
