@@ -16,12 +16,20 @@ public class SchedulingManager {
     private static SchedulingManager instance = null;
     private static int nextRoomId = 0;
 
+    /**
+     * All scehdulings for each room
+     */
     private final HashMap<Integer, ArrayList<MovieScheduling>> movieSchedulings;
+    /**
+     * A mapping between scheduling id and Scheduling
+     */
+    private final HashMap<Integer, MovieScheduling> allSchedulings;
 
     private SchedulingManager() {
         this.roomRepository = RoomRepository.getInstance();
         this.movieRepository = MovieRepository.getInstance();
         this.movieSchedulings = new HashMap<>();
+        this.allSchedulings = new HashMap<>();
     }
 
     public static SchedulingManager getInstance() {
@@ -42,7 +50,9 @@ public class SchedulingManager {
     private int createScheduling(Movie movie, Date date, Room room, int index) {
 
         MovieScheduling movieScheduling = new MovieScheduling(movie.getId(), date,
-                new Date(date.getTime() + (long) movie.getDuration() * 60 * 1000));
+                // calculate the end date
+                new Date(date.getTime() + (long) movie.getDuration() * 60 * 1000),
+                room.getId());
 
         ArrayList<MovieScheduling> bookingList = this.movieSchedulings.get(room.getId());
         if (bookingList.size() <= index) {
@@ -50,6 +60,8 @@ public class SchedulingManager {
         } else {
             bookingList.add(index, movieScheduling);
         }
+
+        this.allSchedulings.put(movieScheduling.getMovieId(), movieScheduling);
         return movieScheduling.getId();
     }
 
@@ -340,7 +352,12 @@ public class SchedulingManager {
     }
 
     public void cancelRun(int schedulingId) {
-        // TODO: Implement
+        MovieScheduling scheduling = allSchedulings.get(schedulingId);
+        if (scheduling != null) {
+            // Remove from the list of scheduling of the room
+            movieSchedulings.get(scheduling.getRoomId()).remove(scheduling);
+            allSchedulings.remove(schedulingId);
+        }
     }
 
     public void listRunsForDay(Date date) {
@@ -348,7 +365,12 @@ public class SchedulingManager {
     }
 
     public Room getRoomForRun(int schedulingId) {
-        //TODO: Implement
+        MovieScheduling scheduling = allSchedulings.get(schedulingId);
+        if (scheduling == null) {
+            return null;
+        }
+        int roomId = scheduling.getRoomId();
+        return roomRepository.getItemWithId(roomId);
     }
 
     public void stopBooking(int schedulingId) {
