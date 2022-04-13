@@ -9,6 +9,7 @@ public class MovieScheduling {
     private final int id;
     private final int roomId;
     private static int nextSchedulingId = 0;
+    private boolean canBook;
 
     public MovieScheduling(int movieId, Date startTime, Date endTime, int roomId) {
         this.movieId = movieId;
@@ -16,6 +17,7 @@ public class MovieScheduling {
         this.endTime = endTime;
         this.id = nextSchedulingId++;
         this.roomId = roomId;
+        this.canBook = true;
     }
 
     public int getMovieId() {
@@ -36,5 +38,13 @@ public class MovieScheduling {
 
     public int getRoomId() {
         return roomId;
+    }
+
+    public boolean getCanBook() {
+        return canBook;
+    }
+
+    public void setCanBook(boolean canBook) {
+        this.canBook = canBook;
     }
 }

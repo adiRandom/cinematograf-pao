@@ -7,8 +7,22 @@ import java.util.List;
 
 public interface Booking {
     String getBookingDate();
+
     List<Seat> getBookingSeats();
-    int getBookingRoom();
+
+    int getBookingRoomId();
+
     Movie getMovie();
-    void moveBooking(int newDate, List<Seat> newSeats, int newRoom);
+
+    int getBookingId();
+
+    /**
+     * @return how much the movie cost
+     */
+    int getPrice();
+
+    /**
+     * @return True when the seats were bought and seats become Sold instead of Booked
+     */
+    boolean isPaid();
 }

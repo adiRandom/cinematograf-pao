@@ -19,4 +19,6 @@ public interface Movie {
     int getDuration();
 
     int getId();
+
+    boolean is3D();
 }

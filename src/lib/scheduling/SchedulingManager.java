@@ -1,14 +1,23 @@
 package lib.scheduling;
 
+import com.sun.javaws.exceptions.InvalidArgumentException;
 import lib.scheduling.utils.MovieScheduling;
+import models.booking.Booking;
+import models.booking.Booking2D;
+import models.booking.Booking3D;
 import models.movie.*;
 import models.room.Room;
 import models.room.RoomType;
+import models.room.Seat;
+import models.room.SeatType;
 import repository.MovieRepository;
 import repository.RoomRepository;
+import utils.Pair;
 
 import javax.naming.OperationNotSupportedException;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 public class SchedulingManager {
     private RoomRepository roomRepository;
@@ -117,6 +126,26 @@ public class SchedulingManager {
 
     }
 
+    private Pair<Long, Long> getDateIntervalForDay(Date date) {
+        // Get the permitted dates
+        GregorianCalendar calendar = new GregorianCalendar();
+        calendar.setTime(date);
+        calendar.set(Calendar.HOUR, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+
+        long permittedStartDate = calendar.getTimeInMillis();
+
+        calendar.set(Calendar.HOUR, 23);
+        calendar.set(Calendar.MINUTE, 59);
+        calendar.set(Calendar.SECOND, 59);
+        calendar.set(Calendar.MILLISECOND, 999);
+
+        long permittedEndDate = calendar.getTimeInMillis();
+        return new Pair<>(permittedStartDate, permittedEndDate);
+    }
+
     /**
      * Find a room that can hold this movie at a given date
      *
@@ -179,21 +208,9 @@ public class SchedulingManager {
 
         } else {
             // Get the permitted dates
-            GregorianCalendar calendar = new GregorianCalendar();
-            calendar.setTime(date);
-            calendar.set(Calendar.HOUR, 0);
-            calendar.set(Calendar.MINUTE, 0);
-            calendar.set(Calendar.SECOND, 0);
-            calendar.set(Calendar.MILLISECOND, 0);
-
-            long permittedStartDate = calendar.getTimeInMillis();
-
-            calendar.set(Calendar.HOUR, 23);
-            calendar.set(Calendar.MINUTE, 59);
-            calendar.set(Calendar.SECOND, 59);
-            calendar.set(Calendar.MILLISECOND, 999);
-
-            long permittedEndDate = calendar.getTimeInMillis();
+            Pair<Long, Long> permittedDate = getDateIntervalForDay(date);
+            long permittedStartDate = permittedDate.getFirst();
+            long permittedEndDate = permittedDate.getSecond();
 
             for (Room room : compatibleRooms) {
                 ArrayList<MovieScheduling> movieSchedulings = this.movieSchedulings.get(room.getId());
@@ -360,8 +377,29 @@ public class SchedulingManager {
         }
     }
 
-    public void listRunsForDay(Date date) {
-        //TODO: Implement
+    /**
+     * Get all the movie
+     *
+     * @param date The day for which we are querying. Hours, minutes and seconds aren't relevant for this param
+     * @return All the movies and the scheduling info
+     */
+    public HashSet<Pair<Movie, MovieScheduling>> getRunsForDay(Date date) {
+        // Get the permitted dates
+        Pair<Long, Long> permittedDate = getDateIntervalForDay(date);
+        long permittedStartDate = permittedDate.getFirst();
+        long permittedEndDate = permittedDate.getSecond();
+
+        HashSet<Pair<Movie, MovieScheduling>> moviesForDay = new HashSet<>();
+
+        for (MovieScheduling scheduling : this.allSchedulings.values()) {
+            if (scheduling.getStartTime().getTime() >= permittedStartDate &&
+                    scheduling.getEndTime().getTime() <= permittedEndDate) {
+                moviesForDay.add(new Pair<>(this.movieRepository.getItemWithId(scheduling.getMovieId()),
+                        scheduling));
+            }
+        }
+
+        return moviesForDay;
     }
 
     public Room getRoomForRun(int schedulingId) {
@@ -374,22 +412,75 @@ public class SchedulingManager {
     }
 
     public void stopBooking(int schedulingId) {
+        // Mark the scheduling as non-bookable
+        MovieScheduling scheduling = this.allSchedulings.get(schedulingId);
+        if (scheduling == null) {
+            return;
+        }
+
+        scheduling.setCanBook(false);
+
+        // Mark all booked seats that weren't bought as free
+        Room room = this.roomRepository.getItemWithId(scheduling.getRoomId());
+        room.makeSeatsAvailable(seat -> seat.getType() == SeatType.BOOKED);
+    }
+
+
+    // TODO: Check in the input class for this scheduling to have enough seats
+    // TODO: Check in the input if you can book this scheduling
+    public Booking bookMovie(int schedulingId, List<Pair<Integer, Integer>> seats) throws InvalidArgumentException, RuntimeException {
+        MovieScheduling scheduling = allSchedulings.get(schedulingId);
+        if (scheduling == null) {
+            throw new InvalidArgumentException(new String[]{"No shceduling wiht this id"});
+        }
+
+        Room room = this.roomRepository.getItemWithId(scheduling.getRoomId());
+        if (room == null) {
+            throw new RuntimeException("No room with this id");
+        }
+
+        // Book the specified seats
+        for (Pair<Integer, Integer> seat : seats) {
+            room.bookSeat(seat.getFirst(), seat.getSecond());
+        }
+
+        // Build the booking object
+        Booking booking = null;
+        Movie movie = this.movieRepository.getItemWithId(scheduling.getMovieId());
+
+        if (movie == null) {
+            throw new RuntimeException("No movie with this id");
+        }
+
+        // Get the seats at the specified positions
+        LinkedList<Seat> bookedSeats = seats.stream()
+                .map(seatLocation -> room.getSeats()
+                        .get(seatLocation.getFirst())
+                        .get(seatLocation.getSecond()))
+                .collect(Collectors.toCollection(LinkedList::new));
+
+        if (movie.is3D()) {
+            booking = new Booking3D(bookedSeats, room.getId(), scheduling.getStartTime(), movie, false);
+        } else {
+            booking = new Booking2D(bookedSeats, room.getId(), scheduling.getStartTime(), movie);
+        }
+
+        return booking;
+    }
+
+    public void moveTicket(Booking booking, List<Pair<Integer, Integer>> newSeats) {
         //TODO: Implement
     }
 
-    public void bookMovie(int movieId, Date date) {
+    public void cancelBooking(Booking booking) {
         //TODO: Implement
     }
 
-    public void moveTicket(int movieId, Date currentDate, Date newDate) {
+    public void buyTicket(int schedulingId, List<Pair<Integer, Integer>> seats) {
         //TODO: Implement
     }
 
-    public void cancelBooking(int movieId, Date date) {
-        //TODO: Implement
-    }
-
-    public void buyTicket(int movieId, Date date) {
+    public void buyTicket(Booking booking) {
         //TODO: Implement
     }
 

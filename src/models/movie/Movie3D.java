@@ -17,4 +17,9 @@ public class Movie3D extends BaseMovie {
     public String getType() {
         return this.type.name();
     }
+
+    @Override
+    public boolean is3D() {
+        return true;
+    }
 }
