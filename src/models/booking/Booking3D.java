@@ -15,6 +15,10 @@ public class Booking3D extends Booking2D {
         this.withGlasses = withGlasses;
     }
 
+    public Booking3D(LinkedList<Seat> bookedSeats, int bookedRoom, Date bookingDate, Movie movie, boolean isPaid, boolean withGlasses) {
+        super(bookedSeats, bookedRoom, bookingDate, movie, isPaid);
+        this.withGlasses = withGlasses;
+    }
 
     public boolean isWithGlasses() {
         return withGlasses;

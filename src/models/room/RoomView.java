@@ -21,7 +21,7 @@ public class RoomView {
     private final int id;
 
 
-    RoomView(int rows, int columns, RoomType type, int id) {
+    public RoomView(int rows, int columns, RoomType type, int id) {
         this.rows = rows;
         this.columns = columns;
         this.type = type;
@@ -39,7 +39,7 @@ public class RoomView {
 
     }
 
-    RoomView(ArrayList<ArrayList<Seat>> seats, RoomType type, int id) {
+    public RoomView(ArrayList<ArrayList<Seat>> seats, RoomType type, int id) {
         this.seats = seats;
         this.type = type;
         this.id = id;
@@ -97,5 +97,14 @@ public class RoomView {
             }
         }
         return collected;
+
+    }
+
+    public int getRows() {
+        return rows;
+    }
+
+    public int getColumns() {
+        return columns;
     }
 }

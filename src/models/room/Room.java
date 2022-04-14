@@ -3,6 +3,7 @@ package models.room;
 import com.sun.javaws.exceptions.InvalidArgumentException;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.function.Predicate;
 
 public class Room extends RoomView {
@@ -18,8 +19,27 @@ public class Room extends RoomView {
         this.availableSeats = this.rows * this.columns;
     }
 
-    public Room(RoomView roomView){
-        super(roomView.getSeats(),roomView.getType(),roomView.getId());
+    public Room(RoomView roomView) {
+        super(new ArrayList<>(), roomView.getType(), roomView.getId());
+
+        // Copy the shape of the room in a new list of seats
+        ArrayList<ArrayList<Seat>> seats = new ArrayList<>(rows);
+
+        for (int i = 0; i < roomView.getRows(); i++) {
+            ArrayList<Seat> row = new ArrayList<Seat>(columns);
+            for (int j = 0; j < roomView.getColumns(); j++) {
+                row.set(j, new Seat(i, j));
+                if (roomView.getSeats().get(i).get(j).getType() == SeatType.NON_EXISTENT) {
+                    // This seat doesn't exist
+                    row.get(j).setType(SeatType.NON_EXISTENT);
+                }
+            }
+            this.seats.set(i, row);
+        }
+
+        // Now set the seats
+        this.seats = seats;
+
         this.availableSeats = this.rows * this.columns;
     }
 
@@ -66,12 +86,30 @@ public class Room extends RoomView {
         }
     }
 
-    public void buySeat(int row, int column) {
+    public void buySeat(int row, int column) throws InvalidArgumentException {
         if (this.seats != null) {
-            this.seats.get(row).get(column).setType(SeatType.SOLD);
-            this.availableSeats--;
+            Seat seat = this.seats.get(row).get(column);
+            switch (seat.getType()) {
+                case NON_EXISTENT: {
+                    throw new InvalidArgumentException(new String[]{"Seat doesn't exist"});
+                }
+                case SOLD: {
+                    throw new InvalidArgumentException(new String[]{
+                            "Can't book this seat",
+                            String.valueOf(row),
+                            String.valueOf(column)});
+                }
+                case BOOKED: {
+                    seat.setType(SeatType.SOLD);
+                }
+                case AVAILABLE: {
+                    seat.setType(SeatType.SOLD);
+                    this.availableSeats--;
+                }
+            }
         }
     }
+
 
     public void clearRoom() {
         this.makeSeatsAvailable(seat -> seat.getType() == SeatType.SOLD);

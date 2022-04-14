@@ -25,4 +25,5 @@ public interface Booking {
      * @return True when the seats were bought and seats become Sold instead of Booked
      */
     boolean isPaid();
+    void setIsPaid(boolean isPaid);
 }

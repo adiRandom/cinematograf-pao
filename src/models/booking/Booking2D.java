@@ -18,7 +18,7 @@ public class Booking2D implements Booking {
     private final Date bookingDate;
     private final Movie movie;
     private final int bookingId;
-    private final boolean isPaid;
+    private boolean isPaid;
 
     private static int nextId = 0;
 
@@ -86,6 +86,11 @@ public class Booking2D implements Booking {
     @Override
     public boolean isPaid() {
         return this.isPaid;
+    }
+
+    @Override
+    public void setIsPaid(boolean isPaid) {
+        this.isPaid = isPaid;
     }
 
     @Override
