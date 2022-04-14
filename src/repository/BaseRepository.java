@@ -1,9 +1,6 @@
 package repository;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -41,5 +38,10 @@ public class BaseRepository<T> implements Repository<T> {
                 .stream()
                 .filter(entry -> predicate.test(entry.getValue())).map(Map.Entry::getValue).collect(Collectors.toList());
 
+    }
+
+    @Override
+    public List<T> getAll() {
+        return new ArrayList<>(this.repo.values());
     }
 }

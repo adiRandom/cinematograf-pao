@@ -248,7 +248,7 @@ public class SchedulingManager {
                 ArrayList<MovieScheduling> movieSchedulings = this.movieSchedulings.get(room.getId());
                 // First movie inserted for this room
                 // Set the start time as the date for the scheduling
-                if(movieSchedulings.size() == 0){
+                if (movieSchedulings.size() == 0) {
                     soonestDateAvailable = new Date(permittedStartDate);
                     chosenRoomView = room;
                     break;
@@ -443,7 +443,7 @@ public class SchedulingManager {
     }
 
     /**
-     * Get all the movie
+     * Get all the movie from a day
      *
      * @param date The day for which we are querying. Hours, minutes and seconds aren't relevant for this param
      * @return All the movies and the scheduling info
@@ -459,6 +459,26 @@ public class SchedulingManager {
         for (MovieScheduling scheduling : this.allSchedulings.values()) {
             if (scheduling.getStartTime().getTime() >= permittedStartDate &&
                     scheduling.getEndTime().getTime() <= permittedEndDate) {
+                moviesForDay.add(new Pair<>(this.movieRepository.getItemWithId(scheduling.getMovieId()),
+                        scheduling));
+            }
+        }
+
+        return moviesForDay;
+    }
+
+    /**
+     * Get all the movie that will run from today on.
+     *
+     * @return All the movies and the scheduling info
+     */
+    public HashSet<Pair<Movie, MovieScheduling>> getRuns() {
+        Date today = new Date();
+
+        HashSet<Pair<Movie, MovieScheduling>> moviesForDay = new HashSet<>();
+
+        for (MovieScheduling scheduling : this.allSchedulings.values()) {
+            if (scheduling.getStartTime().getTime() >= today.getTime()) {
                 moviesForDay.add(new Pair<>(this.movieRepository.getItemWithId(scheduling.getMovieId()),
                         scheduling));
             }
