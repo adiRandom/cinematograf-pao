@@ -56,7 +56,7 @@ public class InputManager {
 
     private boolean getBooleanFromInput(String prompt, String affirmative, String negative) {
         String input = "";
-        while (input.equals(affirmative) && input.equals(negative)) {
+        while (!input.equals(affirmative) && !input.equals(negative)) {
             input = this.getStringFromInput(prompt);
         }
         return input.equals(affirmative);

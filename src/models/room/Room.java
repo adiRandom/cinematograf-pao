@@ -27,13 +27,13 @@ public class Room extends RoomView {
         for (int i = 0; i < roomView.getRows(); i++) {
             ArrayList<Seat> row = new ArrayList<Seat>(columns);
             for (int j = 0; j < roomView.getColumns(); j++) {
-                row.set(j, new Seat(i, j));
+                row.add(new Seat(i, j));
                 if (roomView.getSeats().get(i).get(j).getType() == SeatType.NON_EXISTENT) {
                     // This seat doesn't exist
                     row.get(j).setType(SeatType.NON_EXISTENT);
                 }
             }
-            this.seats.set(i, row);
+            this.seats.add(row);
         }
 
         // Now set the seats

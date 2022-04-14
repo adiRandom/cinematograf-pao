@@ -30,9 +30,9 @@ public class RoomView {
         for (int i = 0; i < rows; i++) {
             ArrayList<Seat> row = new ArrayList<Seat>(columns);
             for (int j = 0; j < columns; j++) {
-                row.set(j, new Seat(i, j));
+                row.add(new Seat(i, j));
             }
-            this.seats.set(i, row);
+            this.seats.add(row);
         }
 
 
