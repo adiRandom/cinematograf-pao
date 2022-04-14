@@ -1,6 +1,5 @@
 package models.room;
 
-import com.sun.javaws.exceptions.InvalidArgumentException;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -50,8 +49,8 @@ public class RoomView {
 
     public void makeSeatAvailable(int row, int column) {
         if (this.seats != null) {
-            Seat seat =  this.seats.get(row).get(column);
-            if(seat.getType()  == SeatType.NON_EXISTENT) {
+            Seat seat = this.seats.get(row).get(column);
+            if (seat.getType() == SeatType.NON_EXISTENT) {
                 seat.setType(SeatType.AVAILABLE);
             }
         }
@@ -62,6 +61,7 @@ public class RoomView {
     /**
      * remove a seat from the room
      * Removing a seat won't affect the current bookings
+     *
      * @param row
      * @param column
      */

@@ -1,6 +1,5 @@
 package models.movie.utils;
 
-import com.sun.javaws.exceptions.InvalidArgumentException;
 import models.movie.*;
 
 import java.util.LinkedList;
@@ -53,7 +52,7 @@ public class MovieBuilder {
         return this;
     }
 
-    public BaseMovie build() throws InvalidArgumentException {
+    public BaseMovie build() throws IllegalArgumentException {
         if (is3D) {
             return new Movie3D(this.title, this.starActors, this.rating, this.studio, this.duration, Movie3DType.valueOf(this.type));
         } else {

@@ -1,6 +1,5 @@
 package models.room;
 
-import com.sun.javaws.exceptions.InvalidArgumentException;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -72,32 +71,34 @@ public class Room extends RoomView {
         }
     }
 
-    public void bookSeat(int row, int column) throws InvalidArgumentException {
+    public void bookSeat(int row, int column) throws IllegalArgumentException {
         if (this.seats != null) {
             Seat seat = this.seats.get(row).get(column);
             if (seat.getType() != SeatType.AVAILABLE) {
-                throw new InvalidArgumentException(new String[]{
-                        "Can't book this seat",
-                        String.valueOf(row),
-                        String.valueOf(column)});
+                throw new IllegalArgumentException(
+                        "Can't book this seat " +
+                                String.valueOf(row) +
+                                "/" +
+                                String.valueOf(column));
             }
             seat.setType(SeatType.BOOKED);
             this.availableSeats--;
         }
     }
 
-    public void buySeat(int row, int column) throws InvalidArgumentException {
+    public void buySeat(int row, int column) throws IllegalArgumentException {
         if (this.seats != null) {
             Seat seat = this.seats.get(row).get(column);
             switch (seat.getType()) {
                 case NON_EXISTENT: {
-                    throw new InvalidArgumentException(new String[]{"Seat doesn't exist"});
+                    throw new IllegalArgumentException("Seat doesn't exist");
                 }
                 case SOLD: {
-                    throw new InvalidArgumentException(new String[]{
-                            "Can't book this seat",
-                            String.valueOf(row),
-                            String.valueOf(column)});
+                    throw new IllegalArgumentException(
+                            "Can't book this seat " +
+                                    String.valueOf(row) +
+                                    "/" +
+                                    String.valueOf(column));
                 }
                 case BOOKED: {
                     seat.setType(SeatType.SOLD);
