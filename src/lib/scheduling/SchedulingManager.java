@@ -6,10 +6,7 @@ import models.booking.Booking;
 import models.booking.Booking2D;
 import models.booking.Booking3D;
 import models.movie.*;
-import models.room.RoomView;
-import models.room.RoomType;
-import models.room.Seat;
-import models.room.SeatType;
+import models.room.*;
 import repository.MovieRepository;
 import repository.RoomViewRepository;
 import utils.Pair;
@@ -33,11 +30,17 @@ public class SchedulingManager {
      */
     private final HashMap<Integer, MovieScheduling> allSchedulings;
 
+    /**
+     * Map booking ids to scheduling ids
+     */
+    private final HashMap<Integer, Integer> bookingSchedulingMapping;
+
     private SchedulingManager() {
         this.roomViewRepository = RoomViewRepository.getInstance();
         this.movieRepository = MovieRepository.getInstance();
         this.movieSchedulings = new HashMap<>();
         this.allSchedulings = new HashMap<>();
+        this.bookingSchedulingMapping = new HashMap<>();
     }
 
     public static SchedulingManager getInstance() {
@@ -489,14 +492,34 @@ public class SchedulingManager {
             booking = new Booking2D(bookedSeats, scheduling.getRoom().getId(), scheduling.getStartTime(), movie);
         }
 
+        this.bookingSchedulingMapping.put(booking.getBookingId(), schedulingId);
+
         return booking;
     }
 
     // TODO: Check in the input class for this scheduling to have enough seats
     // TODO: Check in the input if you can book this scheduling
-    public Booking moveTicket(Booking booking, int newSchedulingId, List<Pair<Integer, Integer>> newSeats) {
-        //
+    public Booking moveTicket(Booking booking, int newSchedulingId, List<Pair<Integer, Integer>> newSeats) throws InvalidArgumentException {
         // Free up the previous seats
+        Integer schedulingId = this.bookingSchedulingMapping.get(booking.getBookingId());
+        if (schedulingId == null) {
+            throw new InvalidArgumentException(new String[]{"Booking not existent"});
+        }
+
+        MovieScheduling movieScheduling = this.allSchedulings.get(schedulingId);
+        if (movieScheduling == null) {
+            throw new InvalidArgumentException(new String[]{"Booking not existent"});
+        }
+        Room room = movieScheduling.getRoom();
+
+        for (Seat seat : booking.getBookingSeats()) {
+            room.makeSeatAvailable(seat.getRow(), seat.getColumn());
+        }
+
+        //Remove the current booking
+        this.bookingSchedulingMapping.remove(booking.getBookingId());
+        // Create a new booking
+        return this.bookMovie(newSchedulingId, newSeats);
     }
 
     public void cancelBooking(Booking booking) {
