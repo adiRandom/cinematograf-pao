@@ -6,21 +6,20 @@ import models.booking.Booking;
 import models.booking.Booking2D;
 import models.booking.Booking3D;
 import models.movie.*;
-import models.room.Room;
+import models.room.RoomView;
 import models.room.RoomType;
 import models.room.Seat;
 import models.room.SeatType;
 import repository.MovieRepository;
-import repository.RoomRepository;
+import repository.RoomViewRepository;
 import utils.Pair;
 
 import javax.naming.OperationNotSupportedException;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 public class SchedulingManager {
-    private RoomRepository roomRepository;
+    private RoomViewRepository roomViewRepository;
     private MovieRepository movieRepository;
     private static SchedulingManager instance = null;
     private static int nextRoomId = 0;
@@ -35,7 +34,7 @@ public class SchedulingManager {
     private final HashMap<Integer, MovieScheduling> allSchedulings;
 
     private SchedulingManager() {
-        this.roomRepository = RoomRepository.getInstance();
+        this.roomViewRepository = RoomViewRepository.getInstance();
         this.movieRepository = MovieRepository.getInstance();
         this.movieSchedulings = new HashMap<>();
         this.allSchedulings = new HashMap<>();
@@ -56,14 +55,14 @@ public class SchedulingManager {
      * @return the scheduling id
      */
 
-    private int createScheduling(Movie movie, Date date, Room room, int index) {
+    private int createScheduling(Movie movie, Date date, RoomView roomView, int index) {
 
         MovieScheduling movieScheduling = new MovieScheduling(movie.getId(), date,
                 // calculate the end date
                 new Date(date.getTime() + (long) movie.getDuration() * 60 * 1000),
-                room.getId());
+                roomView);
 
-        ArrayList<MovieScheduling> bookingList = this.movieSchedulings.get(room.getId());
+        ArrayList<MovieScheduling> bookingList = this.movieSchedulings.get(roomView.getId());
         if (bookingList.size() <= index) {
             bookingList.add(movieScheduling);
         } else {
@@ -83,14 +82,14 @@ public class SchedulingManager {
      */
     private int scheduleMovieUtil(RoomType roomType, Movie movie) {
         // get all the rooms for this type
-        List<Room> compatibleRooms = roomRepository.whereAll(room -> room.getType() == roomType);
+        List<RoomView> compatibleRooms = roomViewRepository.whereAll(room -> room.getType() == roomType);
         // Hold the best fitting room
         Date soonestDateAvailable = null;
-        Room chosenRoom = null;
+        RoomView chosenRoomView = null;
         int newBookingIndex = 0;
 
         // Go through all rooms and find the one that that can book this movie sooner
-        for (Room room : compatibleRooms) {
+        for (RoomView room : compatibleRooms) {
             ArrayList<MovieScheduling> movieSchedulings = this.movieSchedulings.get(room.getId());
 
             // Find the first available spot long enough for this movie
@@ -116,13 +115,13 @@ public class SchedulingManager {
                     soonestDateAvailable = availableDate;
                     // Remember where we should insert the scheduling if this is the soonest available date
                     newBookingIndex = i + 1;
-                    chosenRoom = room;
+                    chosenRoomView = room;
                     break;
                 }
             }
 
         }
-        return createScheduling(movie, soonestDateAvailable, chosenRoom, newBookingIndex);
+        return createScheduling(movie, soonestDateAvailable, chosenRoomView, newBookingIndex);
 
     }
 
@@ -156,17 +155,17 @@ public class SchedulingManager {
      */
     private int scheduleMovieUtil(RoomType roomType, Movie movie, Date date, boolean exact) throws OperationNotSupportedException {
         // get all the rooms for this type
-        List<Room> compatibleRooms = roomRepository.whereAll(room -> room.getType() == roomType);
+        List<RoomView> compatibleRoomViews = roomViewRepository.whereAll(room -> room.getType() == roomType);
         // Hold the best fitting room
         Date soonestDateAvailable = null;
-        Room chosenRoom = null;
+        RoomView chosenRoomView = null;
         int newBookingIndex = 0;
 
         // Go through all rooms and find the one that that can book this movie sooner
         if (exact) {
             long startTime = date.getTime();
             // Find a room free at that exact date
-            for (Room room : compatibleRooms) {
+            for (RoomView room : compatibleRoomViews) {
                 ArrayList<MovieScheduling> movieSchedulings = this.movieSchedulings.get(room.getId());
 
                 // Find the first available spot long enough for this movie
@@ -178,7 +177,7 @@ public class SchedulingManager {
 
                         if (currentEndTime <= startTime) {
                             soonestDateAvailable = date;
-                            chosenRoom = room;
+                            chosenRoomView = room;
                             newBookingIndex = i + 1;
                             break;
                         }
@@ -196,7 +195,7 @@ public class SchedulingManager {
 
                         if (currentEndTime <= startTime && nextStartTime >= startTime && spotSizeInMinutes >= movie.getDuration()) {
                             soonestDateAvailable = date;
-                            chosenRoom = room;
+                            chosenRoomView = room;
                             newBookingIndex = i + 1;
                             break;
                         }
@@ -212,7 +211,7 @@ public class SchedulingManager {
             long permittedStartDate = permittedDate.getFirst();
             long permittedEndDate = permittedDate.getSecond();
 
-            for (Room room : compatibleRooms) {
+            for (RoomView room : compatibleRoomViews) {
                 ArrayList<MovieScheduling> movieSchedulings = this.movieSchedulings.get(room.getId());
 
                 // Find the first available spot long enough for this movie
@@ -251,7 +250,7 @@ public class SchedulingManager {
                         soonestDateAvailable = availableDate;
                         // Remember where we should insert the scheduling if this is the soonest available date
                         newBookingIndex = i + 1;
-                        chosenRoom = room;
+                        chosenRoomView = room;
                         break;
                     }
                 }
@@ -261,7 +260,7 @@ public class SchedulingManager {
         }
         if (soonestDateAvailable != null) {
             // We can book this movie at that time
-            return createScheduling(movie, soonestDateAvailable, chosenRoom, newBookingIndex);
+            return createScheduling(movie, soonestDateAvailable, chosenRoomView, newBookingIndex);
         } else {
             throw new OperationNotSupportedException("No room available for this movie at this time");
         }
@@ -372,7 +371,7 @@ public class SchedulingManager {
         MovieScheduling scheduling = allSchedulings.get(schedulingId);
         if (scheduling != null) {
             // Remove from the list of scheduling of the room
-            movieSchedulings.get(scheduling.getRoomId()).remove(scheduling);
+            movieSchedulings.get(scheduling.getRoom().getId()).remove(scheduling);
             allSchedulings.remove(schedulingId);
         }
     }
@@ -402,13 +401,17 @@ public class SchedulingManager {
         return moviesForDay;
     }
 
-    public Room getRoomForRun(int schedulingId) {
+    /**
+     * Return the room for a scheduling holding the booking info
+     *
+     * @param schedulingId
+     */
+    public RoomView getRoomForRun(int schedulingId) {
         MovieScheduling scheduling = allSchedulings.get(schedulingId);
         if (scheduling == null) {
             return null;
         }
-        int roomId = scheduling.getRoomId();
-        return roomRepository.getItemWithId(roomId);
+        return scheduling.getRoom();
     }
 
     public void stopBooking(int schedulingId) {
@@ -421,27 +424,48 @@ public class SchedulingManager {
         scheduling.setCanBook(false);
 
         // Mark all booked seats that weren't bought as free
-        Room room = this.roomRepository.getItemWithId(scheduling.getRoomId());
-        room.makeSeatsAvailable(seat -> seat.getType() == SeatType.BOOKED);
+        scheduling.getRoom().makeSeatsAvailable(seat -> seat.getType() == SeatType.BOOKED);
     }
 
-
-    // TODO: Check in the input class for this scheduling to have enough seats
-    // TODO: Check in the input if you can book this scheduling
-    public Booking bookMovie(int schedulingId, List<Pair<Integer, Integer>> seats) throws InvalidArgumentException, RuntimeException {
+    /**
+     * Check if you can make a booking for this scheduling for a number of seats
+     *
+     * @param wantToBuy True if this is a selling and not a simple booking
+     * @return null if you can book or a string with the reason you can't book
+     */
+    public String canBook(int schedulingId, int numberOfSeats, boolean wantToBuy) throws InvalidArgumentException, IllegalArgumentException {
         MovieScheduling scheduling = allSchedulings.get(schedulingId);
         if (scheduling == null) {
             throw new InvalidArgumentException(new String[]{"No shceduling wiht this id"});
         }
 
-        Room room = this.roomRepository.getItemWithId(scheduling.getRoomId());
-        if (room == null) {
-            throw new RuntimeException("No room with this id");
+        if (!scheduling.getCanBook() && !wantToBuy) {
+            return "Tickets for this running can't be booked anymore";
+        }
+
+        if (scheduling.getRoom().getSeatsWhere(seat -> seat.getType() == SeatType.AVAILABLE).size() >= numberOfSeats) {
+            return null;
+        } else {
+            return "Not enough seats";
+        }
+
+    }
+
+    // TODO: Check in the input class for this scheduling to have enough seats
+    // TODO: Check in the input if you can book this scheduling
+    public Booking bookMovie(int schedulingId, List<Pair<Integer, Integer>> seats) throws InvalidArgumentException, IllegalArgumentException {
+        MovieScheduling scheduling = allSchedulings.get(schedulingId);
+        if (scheduling == null) {
+            throw new InvalidArgumentException(new String[]{"No shceduling wiht this id"});
+        }
+
+        if (!scheduling.getCanBook()) {
+            throw new IllegalArgumentException("Tickets for this running can't be booked anymore");
         }
 
         // Book the specified seats
         for (Pair<Integer, Integer> seat : seats) {
-            room.bookSeat(seat.getFirst(), seat.getSecond());
+            scheduling.getRoom().bookSeat(seat.getFirst(), seat.getSecond());
         }
 
         // Build the booking object
@@ -449,27 +473,30 @@ public class SchedulingManager {
         Movie movie = this.movieRepository.getItemWithId(scheduling.getMovieId());
 
         if (movie == null) {
-            throw new RuntimeException("No movie with this id");
+            throw new IllegalArgumentException("No movie with this id");
         }
 
         // Get the seats at the specified positions
         LinkedList<Seat> bookedSeats = seats.stream()
-                .map(seatLocation -> room.getSeats()
+                .map(seatLocation -> scheduling.getRoom().getSeats()
                         .get(seatLocation.getFirst())
                         .get(seatLocation.getSecond()))
                 .collect(Collectors.toCollection(LinkedList::new));
 
         if (movie.is3D()) {
-            booking = new Booking3D(bookedSeats, room.getId(), scheduling.getStartTime(), movie, false);
+            booking = new Booking3D(bookedSeats, scheduling.getRoom().getId(), scheduling.getStartTime(), movie, false);
         } else {
-            booking = new Booking2D(bookedSeats, room.getId(), scheduling.getStartTime(), movie);
+            booking = new Booking2D(bookedSeats, scheduling.getRoom().getId(), scheduling.getStartTime(), movie);
         }
 
         return booking;
     }
 
-    public void moveTicket(Booking booking, List<Pair<Integer, Integer>> newSeats) {
-        //TODO: Implement
+    // TODO: Check in the input class for this scheduling to have enough seats
+    // TODO: Check in the input if you can book this scheduling
+    public Booking moveTicket(Booking booking, int newSchedulingId, List<Pair<Integer, Integer>> newSeats) {
+        //
+        // Free up the previous seats
     }
 
     public void cancelBooking(Booking booking) {

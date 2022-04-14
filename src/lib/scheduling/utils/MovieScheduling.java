@@ -1,5 +1,8 @@
 package lib.scheduling.utils;
 
+import models.room.Room;
+import models.room.RoomView;
+
 import java.util.Date;
 
 public class MovieScheduling {
@@ -7,16 +10,16 @@ public class MovieScheduling {
     private final Date startTime;
     private final Date endTime;
     private final int id;
-    private final int roomId;
+    private final Room room;
     private static int nextSchedulingId = 0;
     private boolean canBook;
 
-    public MovieScheduling(int movieId, Date startTime, Date endTime, int roomId) {
+    public MovieScheduling(int movieId, Date startTime, Date endTime, RoomView roomView) {
         this.movieId = movieId;
         this.startTime = startTime;
         this.endTime = endTime;
         this.id = nextSchedulingId++;
-        this.roomId = roomId;
+        this.room = new Room(roomView);
         this.canBook = true;
     }
 
@@ -36,8 +39,8 @@ public class MovieScheduling {
         return id;
     }
 
-    public int getRoomId() {
-        return roomId;
+    public Room getRoom() {
+        return this.room;
     }
 
     public boolean getCanBook() {
