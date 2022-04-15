@@ -145,6 +145,10 @@ public class InputManager {
         System.out.println("Room added!");
     }
 
+    private void handleScheduleMovie(){
+
+    }
+
     public boolean getIsDone() {
         return this.isDone;
     }

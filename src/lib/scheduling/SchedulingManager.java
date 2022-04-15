@@ -83,7 +83,6 @@ public class SchedulingManager {
      * @param movie    The movie to be scheduled
      * @return The scheduling id
      */
-    //TODO: Also make a check before first scheduled and now
     private int scheduleMovieUtil(RoomType roomType, Movie movie) throws IllegalArgumentException {
         // get all the rooms for this type
         List<RoomView> compatibleRooms = roomViewRepository.whereAll(room -> room.getType() == roomType);
@@ -118,7 +117,29 @@ public class SchedulingManager {
                     // Nothing after this booking, we can use this spot
                     availableDate = movieSchedulings.get(i).getEndTime();
                 } else {
-                    //See if we can squeeze in this duration
+
+                    if (i == 0) {
+                        // Also try to fit the movie between Now and the first scheduling start time
+                        Date now = new Date();
+                        long spotSize = movieSchedulings.get(i).getStartTime().getTime() -
+                                now.getTime();
+                        long spotSizeInMinutes = spotSize / 1000 / 60;
+                        if (spotSizeInMinutes >= movie.getDuration()) {
+                            availableDate = now;
+                        }
+
+                        // Check if we can fit the scheduling as the first scheduling of the room before moving on to fitting it between scehdulings
+                        if (soonestDateAvailable == null ||
+                                (availableDate != null && availableDate.before(soonestDateAvailable))) {
+                            soonestDateAvailable = availableDate;
+                            // Remember where we should insert the scheduling if this is the soonest available date
+                            newBookingIndex = 0;
+                            chosenRoomView = room;
+                            break;
+                        }
+                    }
+
+                    //See if we can squeeze in the movie between the current scheduling and the next one
                     long spotSize = movieSchedulings.get(i + 1).getStartTime().getTime() -
                             movieSchedulings.get(i).getEndTime().getTime();
 
@@ -128,6 +149,7 @@ public class SchedulingManager {
                     }
                 }
 
+                // If it's the first room picked or we found a better date for the scehduling, save the info of the room
                 if (soonestDateAvailable == null ||
                         (availableDate != null && availableDate.before(soonestDateAvailable))) {
                     soonestDateAvailable = availableDate;
@@ -173,7 +195,6 @@ public class SchedulingManager {
      * @param exact    If true, it will schedule at exact time and day. If false, only the day will be taken into account
      * @return The scheduling id
      */
-    //TODO: Also make a check before first scheduled and now
     private int scheduleMovieUtil(RoomType roomType, Movie movie, Date date, boolean exact) throws OperationNotSupportedException, IllegalArgumentException {
         // get all the rooms for this type
         List<RoomView> compatibleRoomViews = roomViewRepository.whereAll(room -> room.getType() == roomType);
@@ -217,6 +238,25 @@ public class SchedulingManager {
 
                     } else {
 
+                        if (i == 0) {
+                            // See if the specified date is between Now and the start time of the first scheduling
+                            Date now = new Date();
+                            long spotSize = movieSchedulings.get(i).getStartTime().getTime() -
+                                    now.getTime();
+                            long spotSizeInMinutes = spotSize / 1000 / 60;
+
+                            // Check if we can fit the scheduling as the first scheduling of the room before moving on to fitting it between scehdulings
+                            if (movieSchedulings.get(i).getStartTime().getTime() <= startTime &&
+                                    now.getTime() >= startTime &&
+                                    spotSizeInMinutes >= movie.getDuration()) {
+
+                                soonestDateAvailable = date;
+                                chosenRoomView = room;
+                                newBookingIndex = 0;
+                                break;
+                            }
+                        }
+
                         // See if date is between this scheduling and the next
                         long currentEndTime = movieSchedulings.get(i).getEndTime().getTime();
                         long nextStartTime = movieSchedulings.get(i + 1).getStartTime().getTime();
@@ -226,7 +266,9 @@ public class SchedulingManager {
 
                         long spotSizeInMinutes = spotSize / 1000 / 60;
 
-                        if (currentEndTime <= startTime && nextStartTime >= startTime && spotSizeInMinutes >= movie.getDuration()) {
+                        if (currentEndTime <= startTime &&
+                                nextStartTime >= startTime &&
+                                spotSizeInMinutes >= movie.getDuration()) {
                             soonestDateAvailable = date;
                             chosenRoomView = room;
                             newBookingIndex = i + 1;
@@ -266,6 +308,40 @@ public class SchedulingManager {
                         break;
                     }
 
+                    if (i == 0) {
+                        // Also try to fit the movie between Now and the first scheduling start time
+                        // Now will hold either the current time or the permited start time of the schedling,
+                        // whichever is later
+
+                        Date now = new Date();
+                        if (now.getTime() < permittedStartDate) {
+                            now = new Date(permittedStartDate);
+                        }
+
+                        // If we picked the permittedStartDate as now and the first scheduling starts after that,
+                        // spotSize will be negative
+                        // and the next if will prevent us from picking that interval as the scehduling date
+                        long spotSize = movieSchedulings.get(i).getStartTime().getTime() -
+                                now.getTime();
+                        long spotSizeInMinutes = spotSize / 1000 / 60;
+                        if (spotSizeInMinutes >= movie.getDuration()) {
+                            availableDate = now;
+                        }
+
+                        // Check if we can fit the scheduling as the first scheduling of the room before moving on to fitting it between scehdulings
+                        if (soonestDateAvailable == null ||
+                                (availableDate != null && availableDate.before(soonestDateAvailable))) {
+                            soonestDateAvailable = availableDate;
+                            // Remember where we should insert the scheduling if this is the soonest available date
+                            newBookingIndex = 0;
+                            chosenRoomView = room;
+                            break;
+                        }
+                    }
+
+
+                    // Check if this movie ends in the permitted interval
+                    // this will mean that the possible spot is in the interval
                     if (movieScheduling.getEndTime().getTime() >= permittedStartDate) {
 
                         // A possible spot will be in the allowed interval
@@ -273,6 +349,7 @@ public class SchedulingManager {
                             // Nothing after this booking, we can use this spot
                             availableDate = movieScheduling.getEndTime();
                         } else {
+
                             //See if we can squeeze in this duration
                             long spotSize = movieSchedulings.get(i + 1).getStartTime().getTime() -
                                     movieScheduling.getEndTime().getTime();
