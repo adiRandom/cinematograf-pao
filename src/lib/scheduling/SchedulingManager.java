@@ -8,15 +8,11 @@ import models.movie.*;
 import models.room.*;
 import repository.MovieRepository;
 import repository.RoomViewRepository;
+import services.IdService;
+import services.SerializationService;
 import utils.Pair;
-import utils.SerializeUtils;
 
 import javax.naming.OperationNotSupportedException;
-import java.awt.print.Book;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -24,7 +20,7 @@ public class SchedulingManager {
     private RoomViewRepository roomViewRepository;
     private MovieRepository movieRepository;
     private static SchedulingManager instance = null;
-    private static int nextRoomId = 0;
+    private final IdService idService;
 
     /**
      * All scehdulings for each room
@@ -43,38 +39,18 @@ public class SchedulingManager {
     private SchedulingManager() {
         this.roomViewRepository = RoomViewRepository.getInstance();
         this.movieRepository = MovieRepository.getInstance();
+        this.idService = IdService.getInstance();
         HashMap<Integer, ArrayList<MovieScheduling>> _movieSchedulings;
         HashMap<Integer, MovieScheduling> _allSchedulings;
         HashMap<Integer, Integer> _bookingSchedulingMapping;
 
 
         // Try to load the data from files
-        String movieSchedulingsPath = SerializeUtils.getFilePath("movie_schedulings.txt");
-        String allSchedulingsPath = SerializeUtils.getFilePath("all_schedulings.txt");
-        String bookingsPath = SerializeUtils.getFilePath("bookings_schedulings.txt");
-
-
         try {
-            FileInputStream fileInputStream
-                    = new FileInputStream(movieSchedulingsPath);
-            ObjectInputStream objectInputStream
-                    = new ObjectInputStream(fileInputStream);
-            _movieSchedulings = (HashMap<Integer, ArrayList<MovieScheduling>>) objectInputStream.readObject();
-            objectInputStream.close();
+            _movieSchedulings = (HashMap<Integer, ArrayList<MovieScheduling>>) SerializationService.readObject("movie_schedulings.txt");
 
-            fileInputStream
-                    = new FileInputStream(allSchedulingsPath);
-            objectInputStream
-                    = new ObjectInputStream(fileInputStream);
-            _allSchedulings = (HashMap<Integer, MovieScheduling>) objectInputStream.readObject();
-            objectInputStream.close();
-
-            fileInputStream
-                    = new FileInputStream(bookingsPath);
-            objectInputStream
-                    = new ObjectInputStream(fileInputStream);
-            _bookingSchedulingMapping = (HashMap<Integer, Integer>) objectInputStream.readObject();
-            objectInputStream.close();
+            _allSchedulings = (HashMap<Integer, MovieScheduling>) SerializationService.readObject("all_schedulings.txt");
+            _bookingSchedulingMapping = (HashMap<Integer, Integer>) SerializationService.readObject("bookings_schedulings.txt");
 
         } catch (Exception e) {
             _movieSchedulings = new HashMap<>();
@@ -783,7 +759,7 @@ public class SchedulingManager {
 
 
     public void addRoom(int rows, int columns, RoomType roomType) {
-        RoomView roomView = new RoomView(rows, columns, roomType, nextRoomId++);
+        RoomView roomView = new RoomView(rows, columns, roomType, idService.getRoomId());
         this.roomViewRepository.insertItem(roomView.getId(), roomView);
     }
 
@@ -807,40 +783,8 @@ public class SchedulingManager {
     }
 
     public void saveToDisk() {
-
-
-        String movieSchedulingsPath = SerializeUtils.getFilePath("movie_schedulings.txt");
-        String allSchedulingsPath = SerializeUtils.getFilePath("all_schedulings.txt");
-        String bookingsPath = SerializeUtils.getFilePath("bookings_schedulings.txt");
-
-
-        try {
-            FileOutputStream fileOutputStream
-                    = new FileOutputStream(movieSchedulingsPath);
-            ObjectOutputStream objectOutputStream
-                    = new ObjectOutputStream(fileOutputStream);
-            objectOutputStream.writeObject(this.movieSchedulings);
-            objectOutputStream.flush();
-            objectOutputStream.close();
-
-            fileOutputStream
-                    = new FileOutputStream(allSchedulingsPath);
-            objectOutputStream
-                    = new ObjectOutputStream(fileOutputStream);
-            objectOutputStream.writeObject(this.allSchedulings);
-            objectOutputStream.flush();
-            objectOutputStream.close();
-
-            fileOutputStream
-                    = new FileOutputStream(bookingsPath);
-            objectOutputStream
-                    = new ObjectOutputStream(fileOutputStream);
-            objectOutputStream.writeObject(this.bookingSchedulingMapping);
-            objectOutputStream.flush();
-            objectOutputStream.close();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        SerializationService.writeObject(this.movieSchedulings, "movie_schedulings.txt");
+        SerializationService.writeObject(this.allSchedulings, "all_schedulings.txt");
+        SerializationService.writeObject(this.bookingSchedulingMapping, "bookings_schedulings.txt");
     }
 }

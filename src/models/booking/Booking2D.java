@@ -4,6 +4,7 @@ import models.movie.Movie;
 import models.movie.Movie2D;
 import models.movie.Movie2DType;
 import models.room.Seat;
+import services.IdService;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -19,15 +20,16 @@ public class Booking2D implements Booking {
     private final Movie movie;
     private final int bookingId;
     private boolean isPaid;
+    private IdService idService;
 
-    private static int nextId = 0;
 
     public Booking2D(LinkedList<Seat> bookedSeats, int bookedRoomId, Date bookingDate, Movie movie) {
         this.bookedSeats = bookedSeats;
         this.bookedRoomId = bookedRoomId;
         this.bookingDate = bookingDate;
         this.movie = movie;
-        this.bookingId = nextId++;
+        this.idService = IdService.getInstance();
+        this.bookingId = idService.getBookingId();
         this.isPaid = false;
     }
 
@@ -36,7 +38,8 @@ public class Booking2D implements Booking {
         this.bookedRoomId = bookedRoomId;
         this.bookingDate = bookingDate;
         this.movie = movie;
-        this.bookingId = nextId++;
+        this.idService = IdService.getInstance();
+        this.bookingId = idService.getBookingId();
         this.isPaid = isPaid;
     }
 

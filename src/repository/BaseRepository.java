@@ -1,6 +1,6 @@
 package repository;
 
-import utils.SerializeUtils;
+import services.SerializationService;
 
 import java.io.*;
 import java.util.*;
@@ -14,21 +14,7 @@ public abstract class BaseRepository<T extends Serializable> implements Reposito
 
 
     public void saveToDisk() {
-        String repoFilePath = SerializeUtils.getFilePath(repoName + ".txt");
-
-        try {
-            FileOutputStream fileOutputStream
-                    = new FileOutputStream(repoFilePath);
-            ObjectOutputStream objectOutputStream
-                    = new ObjectOutputStream(fileOutputStream);
-            objectOutputStream.writeObject(repo);
-            objectOutputStream.flush();
-            objectOutputStream.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-
+        SerializationService.writeObject(repo, repoName + ".txt");
     }
 
 
@@ -37,14 +23,8 @@ public abstract class BaseRepository<T extends Serializable> implements Reposito
         HashMap<Integer, T> _repo;
 
         //Try to load repo from disk
-        String repoFilePath = SerializeUtils.getFilePath(repoName + ".txt");
         try {
-            FileInputStream fileInputStream
-                    = new FileInputStream(repoFilePath);
-            ObjectInputStream objectInputStream
-                    = new ObjectInputStream(fileInputStream);
-            _repo = (HashMap<Integer, T>) objectInputStream.readObject();
-            objectInputStream.close();
+            _repo = (HashMap<Integer, T>) SerializationService.readObject(repoName + ".txt");
         } catch (Exception e) {
             _repo = new HashMap<>();
         }
@@ -86,9 +66,4 @@ public abstract class BaseRepository<T extends Serializable> implements Reposito
     }
 
 
-    @Override
-    protected void finalize() throws Throwable {
-        this.saveToDisk();
-        super.finalize();
-    }
 }

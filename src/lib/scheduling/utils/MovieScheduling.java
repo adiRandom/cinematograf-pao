@@ -2,6 +2,7 @@ package lib.scheduling.utils;
 
 import models.room.Room;
 import models.room.RoomView;
+import services.IdService;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -12,14 +13,15 @@ public class MovieScheduling implements Serializable {
     private final Date endTime;
     private final int id;
     private final Room room;
-    private static int nextSchedulingId = 0;
     private boolean canBook;
+    private final IdService idService;
 
     public MovieScheduling(int movieId, Date startTime, Date endTime, RoomView roomView) {
         this.movieId = movieId;
         this.startTime = startTime;
         this.endTime = endTime;
-        this.id = nextSchedulingId++;
+        this.idService = IdService.getInstance();
+        this.id = idService.getSchedulingId();
         this.room = new Room(roomView);
         this.canBook = true;
     }

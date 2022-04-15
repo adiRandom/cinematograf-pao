@@ -1,6 +1,8 @@
 package models.movie;
 
 
+import services.IdService;
+
 import java.util.LinkedList;
 
 public abstract class BaseMovie implements Movie {
@@ -11,8 +13,8 @@ public abstract class BaseMovie implements Movie {
     private final String studio;
     private final int duration;
     private final int id;
+    private final IdService idService;
 
-    private static int nextId = 0;
 
     public BaseMovie(String title, LinkedList<String> starActors, int rating, String studio, int duration) throws IllegalArgumentException {
 
@@ -25,7 +27,8 @@ public abstract class BaseMovie implements Movie {
         this.rating = rating;
         this.studio = studio;
         this.duration = duration;
-        this.id = BaseMovie.nextId++;
+        this.idService = IdService.getInstance();
+        this.id = idService.getMovieId();
     }
 
     @Override

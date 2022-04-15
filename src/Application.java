@@ -2,11 +2,12 @@ import cli.InputManager;
 import lib.scheduling.SchedulingManager;
 import repository.MovieRepository;
 import repository.RoomViewRepository;
-import utils.SerializeUtils;
+import services.IdService;
 
 // TODO: Fix static variable preservation
 public class Application {
     public static void main(String[] args) {
+        IdService idService = IdService.getInstance();
         RoomViewRepository roomViewRepository = RoomViewRepository.getInstance();
         MovieRepository movieRepository = MovieRepository.getInstance();
         SchedulingManager schedulingManager = SchedulingManager.getInstance();
@@ -19,5 +20,6 @@ public class Application {
         roomViewRepository.saveToDisk();
         movieRepository.saveToDisk();
         schedulingManager.saveToDisk();
+        idService.saveToDisk();
     }
 }
