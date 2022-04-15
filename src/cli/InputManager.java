@@ -8,9 +8,8 @@ import models.room.RoomType;
 import models.room.RoomView;
 import repository.MovieRepository;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Scanner;
+import javax.naming.OperationNotSupportedException;
+import java.util.*;
 
 public class InputManager {
     private boolean isDone;
@@ -82,6 +81,10 @@ public class InputManager {
                     this.handleAddRoom();
                     break;
                 }
+                // TODO: test exact
+                //TODO: Test auto time
+                //TODO: test conflict
+                //TODO: test schedule before first scheduling
                 case SCHEDULE_MOVIE: {
                     this.handleScheduleMovie();
                     break;
@@ -94,7 +97,7 @@ public class InputManager {
                     break;
                 }
             }
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException | OperationNotSupportedException e) {
             System.out.println(e.getMessage());
         }
 
@@ -150,7 +153,7 @@ public class InputManager {
         System.out.println("Room added!");
     }
 
-    private void handleScheduleMovie() {
+    private void handleScheduleMovie() throws OperationNotSupportedException {
         List<Movie> movies = movieRepository.getAll();
         for (Movie movie : movies) {
             System.out.println(movie.getId() + ". " + movie.getTitle());
@@ -160,12 +163,31 @@ public class InputManager {
             int movieId = this.getIntFromInput("Pick a movie by its id");
             pickedMovie = movieRepository.getItemWithId(movieId);
         }
-        boolean withDate = this.getBooleanFromInput("Do you want to shcedule it at a particular date? Yes or No", "Yes", "No");
+        boolean withDate = this.getBooleanFromInput("Do you want to schedule it at a particular date? Yes or No", "Yes", "No");
         if (!withDate) {
             int schedulingId = schedulingManager.scheduleMovie(pickedMovie);
             System.out.println("Scheduling successful. Id: " + Integer.toString(schedulingId));
         } else {
+            int day = getIntFromInput("What day (1-31)?");
+            // January is 0
+            int month = getIntFromInput("What month (1-12)?") - 1;
+            int year = getIntFromInput("What year?");
 
+            int hour = getIntFromInput("What hour (24H)? Enter -1 to pick the time automatically");
+            int minute = 0;
+            if (hour != -1) {
+                minute = getIntFromInput("What minute?");
+            }
+
+            Calendar calendar = new GregorianCalendar();
+            if (hour != -1) {
+                calendar.set(year, month, day, hour, minute);
+            } else {
+                calendar.set(year, month, day);
+            }
+
+            int schedulingId = schedulingManager.scheduleMovie(pickedMovie, calendar.getTime(), hour != -1);
+            System.out.println("Scheduling successful. Id: " + Integer.toString(schedulingId));
         }
     }
 

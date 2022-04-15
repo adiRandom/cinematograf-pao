@@ -4,6 +4,7 @@ import repository.MovieRepository;
 import repository.RoomViewRepository;
 import utils.SerializeUtils;
 
+// TODO: Fix static variable preservation
 public class Application {
     public static void main(String[] args) {
         RoomViewRepository roomViewRepository = RoomViewRepository.getInstance();

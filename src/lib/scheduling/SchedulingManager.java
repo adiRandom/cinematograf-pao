@@ -260,6 +260,11 @@ public class SchedulingManager {
 
         // Go through all rooms and find the one that that can book this movie sooner
         if (exact) {
+            if (date.getTime() < new Date().getTime()) {
+                // Don't allow a scehduling in the past
+                throw new IllegalArgumentException("This date is in the past");
+            }
+
             long startTime = date.getTime();
             // Find a room free at that exact date
             for (RoomView room : compatibleRoomViews) {
@@ -336,6 +341,13 @@ public class SchedulingManager {
             Pair<Long, Long> permittedDate = getDateIntervalForDay(date);
             long permittedStartDate = permittedDate.getFirst();
             long permittedEndDate = permittedDate.getSecond();
+
+            long todayStartTime = getDateIntervalForDay(new Date()).getFirst();
+
+            if (permittedStartDate < todayStartTime) {
+                // Don't allow a scheduling in the past
+                throw new IllegalArgumentException("This date is in the past");
+            }
 
             for (RoomView room : compatibleRoomViews) {
                 ArrayList<MovieScheduling> movieSchedulings = this.movieSchedulings.get(room.getId());

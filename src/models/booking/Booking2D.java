@@ -103,7 +103,12 @@ public class Booking2D implements Booking {
                 .append(" in room ")
                 .append(this.bookedRoomId)
                 .append(" for seats ");
-        // TODO: Append the seats
+        for (Seat seat : this.bookedSeats) {
+            stringBuilder.append(seat.getRow())
+                    .append("/")
+                    .append(seat.getColumn())
+                    .append(", ");
+        }
 
         return stringBuilder.toString();
     }
