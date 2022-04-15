@@ -60,7 +60,7 @@ public abstract class BaseMovie implements Movie {
 
     @Override
     public String toString() {
-        StringBuilder rep = new StringBuilder(this.title + "with a score of " + String.valueOf(this.rating) + "starring ");
+        StringBuilder rep = new StringBuilder(this.title + " with a score of " + String.valueOf(this.rating) + " starring ");
         for (String actor : this.starActors) {
             rep.append(actor).append(", ");
         }

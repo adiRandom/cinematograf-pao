@@ -1,14 +1,17 @@
 package cli;
 
 import lib.scheduling.SchedulingManager;
+import lib.scheduling.utils.MovieScheduling;
 import models.movie.Movie;
 import models.movie.Movie3DType;
 import models.movie.utils.MovieBuilder;
 import models.room.RoomType;
 import models.room.RoomView;
 import repository.MovieRepository;
+import utils.Pair;
 
 import javax.naming.OperationNotSupportedException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class InputManager {
@@ -73,6 +76,10 @@ public class InputManager {
     private void handleCommand(Options command) {
         try {
             switch (command) {
+                case LIST_MOVIES: {
+                    this.handleListMovies();
+                    break;
+                }
                 case ADD_MOVIE: {
                     this.handleAddMovie();
                     break;
@@ -101,6 +108,17 @@ public class InputManager {
             System.out.println(e.getMessage());
         }
 
+    }
+
+    private void handleListMovies() {
+        HashSet<Pair<Movie, MovieScheduling>> allRuns = schedulingManager.getRuns();
+        SimpleDateFormat format = new SimpleDateFormat("dd.MM.yyyy HH:mm");
+        for (Pair<Movie, MovieScheduling> run : allRuns) {
+            Movie movie = run.getFirst();
+            MovieScheduling scheduling = run.getSecond();
+            System.out.println(scheduling.getId() + ". " + movie.getTitle() + " at " + format.format(scheduling.getStartTime()));
+        }
+        System.out.println("------");
     }
 
     private void handleAddMovie() throws IllegalArgumentException {
@@ -187,7 +205,7 @@ public class InputManager {
             }
 
             int schedulingId = schedulingManager.scheduleMovie(pickedMovie, calendar.getTime(), hour != -1);
-            System.out.println("Scheduling successful. Id: " + Integer.toString(schedulingId));
+            System.out.println("Scheduling successful. Id: " + schedulingId);
         }
     }
 
