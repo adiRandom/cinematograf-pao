@@ -787,9 +787,8 @@ public class SchedulingManager {
         }
     }
 
-    @Override
-    protected void finalize() throws Throwable {
-        super.finalize();
+    public void saveToDisk() {
+
 
         String movieSchedulingsPath = SerializeUtils.getFilePath("movie_schedulings.txt");
         String allSchedulingsPath = SerializeUtils.getFilePath("all_schedulings.txt");

@@ -13,8 +13,7 @@ public abstract class BaseRepository<T extends Serializable> implements Reposito
     private final String repoName;
 
 
-    private void saveToDisk() {
-
+    public void saveToDisk() {
         String repoFilePath = SerializeUtils.getFilePath(repoName + ".txt");
 
         try {
@@ -89,7 +88,7 @@ public abstract class BaseRepository<T extends Serializable> implements Reposito
 
     @Override
     protected void finalize() throws Throwable {
-        super.finalize();
         this.saveToDisk();
+        super.finalize();
     }
 }
