@@ -82,6 +82,10 @@ public class InputManager {
                     this.handleAddRoom();
                     break;
                 }
+                case SCHEDULE_MOVIE: {
+                    this.handleScheduleMovie();
+                    break;
+                }
                 case EXIT: {
                     this.isDone = true;
                     break;
@@ -149,7 +153,7 @@ public class InputManager {
     private void handleScheduleMovie() {
         List<Movie> movies = movieRepository.getAll();
         for (Movie movie : movies) {
-            System.out.println(String.valueOf(movie.getId()) + ". " + movie.getTitle());
+            System.out.println(movie.getId() + ". " + movie.getTitle());
         }
         Movie pickedMovie = null;
         while (pickedMovie == null) {
@@ -159,8 +163,8 @@ public class InputManager {
         boolean withDate = this.getBooleanFromInput("Do you want to shcedule it at a particular date? Yes or No", "Yes", "No");
         if (!withDate) {
             int schedulingId = schedulingManager.scheduleMovie(pickedMovie);
-            System.out.println("Scheduling successful.Id: " + Integer.toString(schedulingId));
-        }else{
+            System.out.println("Scheduling successful. Id: " + Integer.toString(schedulingId));
+        } else {
 
         }
     }

@@ -111,6 +111,12 @@ public class SchedulingManager {
                 roomView);
 
         ArrayList<MovieScheduling> bookingList = this.movieSchedulings.get(roomView.getId());
+        if (bookingList == null) {
+            // First booking for this room
+            bookingList = new ArrayList<MovieScheduling>();
+            bookingList.add(movieScheduling);
+            this.movieSchedulings.put(roomView.getId(), bookingList);
+        }
         if (bookingList.size() <= index) {
             bookingList.add(movieScheduling);
         } else {
@@ -147,7 +153,7 @@ public class SchedulingManager {
 
             // First movie inserted for this room
             // Nothing can be sooner than the current time so set the current date as the soonest available
-            if (movieSchedulings.size() == 0) {
+            if (movieSchedulings == null || movieSchedulings.size() == 0) {
                 soonestDateAvailable = new Date();
                 chosenRoomView = room;
                 break;
@@ -261,7 +267,7 @@ public class SchedulingManager {
 
                 // First movie inserted for this room
                 // The exact date specified is available
-                if (movieSchedulings.size() == 0) {
+                if (movieSchedulings == null || movieSchedulings.size() == 0) {
                     soonestDateAvailable = date;
                     chosenRoomView = room;
                     break;
@@ -335,7 +341,7 @@ public class SchedulingManager {
                 ArrayList<MovieScheduling> movieSchedulings = this.movieSchedulings.get(room.getId());
                 // First movie inserted for this room
                 // Set the start time as the date for the scheduling
-                if (movieSchedulings.size() == 0) {
+                if (movieSchedulings == null || movieSchedulings.size() == 0) {
                     soonestDateAvailable = new Date(permittedStartDate);
                     chosenRoomView = room;
                     break;

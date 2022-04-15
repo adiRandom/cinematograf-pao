@@ -43,8 +43,8 @@ public abstract class BaseRepository<T extends Serializable> implements Reposito
                     = new FileInputStream(repoFilePath);
             ObjectInputStream objectInputStream
                     = new ObjectInputStream(fileInputStream);
-            objectInputStream.close();
             _repo = (HashMap<Integer, T>) objectInputStream.readObject();
+            objectInputStream.close();
         } catch (Exception e) {
             _repo = new HashMap<>();
         }

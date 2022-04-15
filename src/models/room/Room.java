@@ -19,10 +19,11 @@ public class Room extends RoomView {
     }
 
     public Room(RoomView roomView) {
-        super(new ArrayList<>(), roomView.getType(), roomView.getId());
+        // Init the seats with those in the roomView param for the rows and columns init.
+        super(roomView.seats, roomView.getType(), roomView.getId());
 
-        // Copy the shape of the room in a new list of seats
-        ArrayList<ArrayList<Seat>> seats = new ArrayList<>(rows);
+        // Immediately replace with an empty list for a deep copy
+        this.seats = new ArrayList<>(this.rows);
 
         for (int i = 0; i < roomView.getRows(); i++) {
             ArrayList<Seat> row = new ArrayList<Seat>(columns);
@@ -33,11 +34,8 @@ public class Room extends RoomView {
                     row.get(j).setType(SeatType.NON_EXISTENT);
                 }
             }
-            this.seats.add(row);
+            seats.add(row);
         }
-
-        // Now set the seats
-        this.seats = seats;
 
         this.availableSeats = this.rows * this.columns;
     }
