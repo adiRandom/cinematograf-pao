@@ -1,6 +1,8 @@
 package models.room;
 
-public class Seat {
+import java.io.Serializable;
+
+public class Seat implements Serializable {
     private SeatType type;
     private final int row;
     private final int column;

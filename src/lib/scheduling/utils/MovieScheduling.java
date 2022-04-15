@@ -3,9 +3,10 @@ package lib.scheduling.utils;
 import models.room.Room;
 import models.room.RoomView;
 
+import java.io.Serializable;
 import java.util.Date;
 
-public class MovieScheduling {
+public class MovieScheduling implements Serializable {
     private final int movieId;
     private final Date startTime;
     private final Date endTime;

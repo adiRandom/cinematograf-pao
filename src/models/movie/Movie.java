@@ -1,8 +1,9 @@
 package models.movie;
 
+import java.io.Serializable;
 import java.util.List;
 
-public interface Movie {
+public interface Movie extends Serializable {
     String getTitle();
 
     List<String> getStarActors();

@@ -6,7 +6,7 @@ public class RoomViewRepository extends BaseRepository<RoomView> {
     private static RoomViewRepository instance = null;
 
     private RoomViewRepository() {
-        super();
+        super("room_repo");
     }
 
     public static RoomViewRepository getInstance() {

@@ -9,6 +9,7 @@ import models.room.RoomView;
 import repository.MovieRepository;
 
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Scanner;
 
 public class InputManager {
@@ -145,8 +146,23 @@ public class InputManager {
         System.out.println("Room added!");
     }
 
-    private void handleScheduleMovie(){
+    private void handleScheduleMovie() {
+        List<Movie> movies = movieRepository.getAll();
+        for (Movie movie : movies) {
+            System.out.println(String.valueOf(movie.getId()) + ". " + movie.getTitle());
+        }
+        Movie pickedMovie = null;
+        while (pickedMovie == null) {
+            int movieId = this.getIntFromInput("Pick a movie by its id");
+            pickedMovie = movieRepository.getItemWithId(movieId);
+        }
+        boolean withDate = this.getBooleanFromInput("Do you want to shcedule it at a particular date? Yes or No", "Yes", "No");
+        if (!withDate) {
+            int schedulingId = schedulingManager.scheduleMovie(pickedMovie);
+            System.out.println("Scheduling successful.Id: " + Integer.toString(schedulingId));
+        }else{
 
+        }
     }
 
     public boolean getIsDone() {

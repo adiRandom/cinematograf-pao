@@ -9,9 +9,14 @@ import models.room.*;
 import repository.MovieRepository;
 import repository.RoomViewRepository;
 import utils.Pair;
+import utils.SerializeUtils;
 
 import javax.naming.OperationNotSupportedException;
 import java.awt.print.Book;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -38,9 +43,49 @@ public class SchedulingManager {
     private SchedulingManager() {
         this.roomViewRepository = RoomViewRepository.getInstance();
         this.movieRepository = MovieRepository.getInstance();
-        this.movieSchedulings = new HashMap<>();
-        this.allSchedulings = new HashMap<>();
-        this.bookingSchedulingMapping = new HashMap<>();
+        HashMap<Integer, ArrayList<MovieScheduling>> _movieSchedulings;
+        HashMap<Integer, MovieScheduling> _allSchedulings;
+        HashMap<Integer, Integer> _bookingSchedulingMapping;
+
+
+        // Try to load the data from files
+        String movieSchedulingsPath = SerializeUtils.getFilePath("movie_schedulings.txt");
+        String allSchedulingsPath = SerializeUtils.getFilePath("all_schedulings.txt");
+        String bookingsPath = SerializeUtils.getFilePath("bookings_schedulings.txt");
+
+
+        try {
+            FileInputStream fileInputStream
+                    = new FileInputStream(movieSchedulingsPath);
+            ObjectInputStream objectInputStream
+                    = new ObjectInputStream(fileInputStream);
+            _movieSchedulings = (HashMap<Integer, ArrayList<MovieScheduling>>) objectInputStream.readObject();
+            objectInputStream.close();
+
+            fileInputStream
+                    = new FileInputStream(allSchedulingsPath);
+            objectInputStream
+                    = new ObjectInputStream(fileInputStream);
+            _allSchedulings = (HashMap<Integer, MovieScheduling>) objectInputStream.readObject();
+            objectInputStream.close();
+
+            fileInputStream
+                    = new FileInputStream(bookingsPath);
+            objectInputStream
+                    = new ObjectInputStream(fileInputStream);
+            _bookingSchedulingMapping = (HashMap<Integer, Integer>) objectInputStream.readObject();
+            objectInputStream.close();
+
+        } catch (Exception e) {
+            _movieSchedulings = new HashMap<>();
+            _allSchedulings = new HashMap<>();
+            _bookingSchedulingMapping = new HashMap<>();
+        }
+
+        this.movieSchedulings = _movieSchedulings;
+        this.allSchedulings = _allSchedulings;
+        this.bookingSchedulingMapping = _bookingSchedulingMapping;
+
     }
 
     public static SchedulingManager getInstance() {
@@ -742,4 +787,42 @@ public class SchedulingManager {
         }
     }
 
+    @Override
+    protected void finalize() throws Throwable {
+        super.finalize();
+
+        String movieSchedulingsPath = SerializeUtils.getFilePath("movie_schedulings.txt");
+        String allSchedulingsPath = SerializeUtils.getFilePath("all_schedulings.txt");
+        String bookingsPath = SerializeUtils.getFilePath("bookings_schedulings.txt");
+
+
+        try {
+            FileOutputStream fileOutputStream
+                    = new FileOutputStream(movieSchedulingsPath);
+            ObjectOutputStream objectOutputStream
+                    = new ObjectOutputStream(fileOutputStream);
+            objectOutputStream.writeObject(this.movieSchedulings);
+            objectOutputStream.flush();
+            objectOutputStream.close();
+
+            fileOutputStream
+                    = new FileOutputStream(allSchedulingsPath);
+            objectOutputStream
+                    = new ObjectOutputStream(fileOutputStream);
+            objectOutputStream.writeObject(this.allSchedulings);
+            objectOutputStream.flush();
+            objectOutputStream.close();
+
+            fileOutputStream
+                    = new FileOutputStream(bookingsPath);
+            objectOutputStream
+                    = new ObjectOutputStream(fileOutputStream);
+            objectOutputStream.writeObject(this.bookingSchedulingMapping);
+            objectOutputStream.flush();
+            objectOutputStream.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

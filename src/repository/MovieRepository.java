@@ -7,8 +7,9 @@ public class MovieRepository extends BaseRepository<Movie> {
     private static MovieRepository instance = null;
 
     private MovieRepository() {
-        super();
+        super("movie_repo");
     }
+
 
     public static MovieRepository getInstance() {
         if (instance == null) {

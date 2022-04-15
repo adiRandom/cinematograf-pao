@@ -1,15 +1,56 @@
 package repository;
 
+import utils.SerializeUtils;
+
+import java.io.*;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-public class BaseRepository<T> implements Repository<T> {
+public abstract class BaseRepository<T extends Serializable> implements Repository<T> {
 
     private final HashMap<Integer, T> repo;
+    private final String repoName;
 
-    public BaseRepository() {
-        this.repo = new HashMap<>();
+
+    private void saveToDisk() {
+
+        String repoFilePath = SerializeUtils.getFilePath(repoName + ".txt");
+
+        try {
+            FileOutputStream fileOutputStream
+                    = new FileOutputStream(repoFilePath);
+            ObjectOutputStream objectOutputStream
+                    = new ObjectOutputStream(fileOutputStream);
+            objectOutputStream.writeObject(repo);
+            objectOutputStream.flush();
+            objectOutputStream.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
+
+    public BaseRepository(String repoName) {
+        this.repoName = repoName;
+        HashMap<Integer, T> _repo;
+
+        //Try to load repo from disk
+        String repoFilePath = SerializeUtils.getFilePath(repoName + ".txt");
+        try {
+            FileInputStream fileInputStream
+                    = new FileInputStream(repoFilePath);
+            ObjectInputStream objectInputStream
+                    = new ObjectInputStream(fileInputStream);
+            objectInputStream.close();
+            _repo = (HashMap<Integer, T>) objectInputStream.readObject();
+        } catch (Exception e) {
+            _repo = new HashMap<>();
+        }
+
+        this.repo = _repo;
     }
 
     @Override
@@ -43,5 +84,12 @@ public class BaseRepository<T> implements Repository<T> {
     @Override
     public List<T> getAll() {
         return new ArrayList<>(this.repo.values());
+    }
+
+
+    @Override
+    protected void finalize() throws Throwable {
+        super.finalize();
+        this.saveToDisk();
     }
 }

@@ -1,6 +1,7 @@
 package models.room;
 
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.function.Predicate;
@@ -11,7 +12,7 @@ import java.util.function.Predicate;
  * No info about their booking status
  * Booking info is available if a Room is upcasted
  */
-public class RoomView {
+public class RoomView implements Serializable {
 
     protected ArrayList<ArrayList<Seat>> seats = null;
     protected int rows;
