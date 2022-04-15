@@ -37,7 +37,7 @@ public class SchedulingService {
      * @return the scheduling id
      */
 
-    public int createScheduling(Movie movie, Date date, RoomView roomView, int index) {
+    private int createScheduling(Movie movie, Date date, RoomView roomView, int index) {
 
         MovieScheduling movieScheduling = new MovieScheduling(movie.getId(), date,
                 // calculate the end date
@@ -58,7 +58,7 @@ public class SchedulingService {
             }
         }
 
-        this.allSchedulings.put(movieScheduling.getMovieId(), movieScheduling);
+        this.allSchedulings.put(movieScheduling.getId(), movieScheduling);
         return movieScheduling.getId();
     }
 
@@ -216,9 +216,10 @@ public class SchedulingService {
                 // Find the first available spot long enough for this movie
                 for (int i = 0; i < movieSchedulingsForRoom.size(); i++) {
                     if (i == movieSchedulingsForRoom.size() - 1) {
-                        // Nothing after this booking, we could use this spot
+                        // Nothing after this scheduling
+                        //  See if it ends before the scheduling we want to make is supposed to begin
+                        // If yes, we can use the spot
                         long currentEndTime = movieSchedulingsForRoom.get(i).getEndTime().getTime();
-
 
                         if (currentEndTime <= startTime) {
                             soonestDateAvailable = date;
@@ -343,8 +344,11 @@ public class SchedulingService {
                     if (movieScheduling.getEndTime().getTime() >= permittedStartDate) {
 
                         // A possible spot will be in the allowed interval
-                        if (i == movieSchedulingsForRoom.size() - 1) {
-                            // Nothing after this booking, we can use this spot
+                        if (i == movieSchedulingsForRoom.size() - 1 &&
+                                movieScheduling.getEndTime().getTime() <= permittedEndDate) {
+                            // Nothing after this scheduling,
+                            // Also, this scheduling ends in the permited interval
+                            // we can use this spot
                             availableDate = movieScheduling.getEndTime();
                         } else {
 

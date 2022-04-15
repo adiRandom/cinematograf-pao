@@ -34,7 +34,6 @@ public class IdService implements Serializable {
             this.roomId = localData.getRoomId();
             this.bookingId = localData.getBookingId();
         } catch (IOException | ClassCastException | ClassNotFoundException e) {
-            e.printStackTrace();
             this.bookingId = 0;
             this.movieId = 0;
             this.roomId = 0;

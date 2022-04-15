@@ -76,6 +76,7 @@ public class InputManager {
     private void handleCommand(Options command) {
         try {
             switch (command) {
+                //TOOD: Make it print everything
                 case LIST_MOVIES: {
                     this.handleListMovies();
                     break;
@@ -88,10 +89,7 @@ public class InputManager {
                     this.handleAddRoom();
                     break;
                 }
-                // TODO: test exact
-                //TODO: Test auto time
-                //TODO: test conflict
-                //TODO: test schedule before first scheduling
+                //TODO: Fix conflict
                 case SCHEDULE_MOVIE: {
                     this.handleScheduleMovie();
                     break;
