@@ -11,15 +11,15 @@ import java.util.*;
 
 public class Booking2D implements Booking {
 
-    private final LinkedList<Seat> bookedSeats;
-    private final int bookedRoomId;
+    protected final LinkedList<Seat> bookedSeats;
+    protected final int bookedRoomId;
     /**
      * The time in ms
      */
-    private final Date bookingDate;
-    private final Movie movie;
-    private final int bookingId;
-    private boolean isPaid;
+    protected final Date bookingDate;
+    protected final Movie movie;
+    protected final int bookingId;
+    protected boolean isPaid;
     private IdService idService;
 
 
@@ -98,8 +98,10 @@ public class Booking2D implements Booking {
 
     @Override
     public String toString() {
-        StringBuilder stringBuilder = new StringBuilder("Booking for ");
+        StringBuilder stringBuilder = new StringBuilder("Booking number ");
         stringBuilder
+                .append(this.bookingId)
+                .append(" for ")
                 .append(this.movie.getTitle())
                 .append(" for ")
                 .append(this.bookingDate.toString())
@@ -112,6 +114,7 @@ public class Booking2D implements Booking {
                     .append(seat.getColumn())
                     .append(", ");
         }
+        stringBuilder.append("To buy the seats it will cost ").append(this.getPrice());
 
         return stringBuilder.toString();
     }

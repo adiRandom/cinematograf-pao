@@ -23,6 +23,8 @@ public class SchedulingManager {
     private final SchedulingService schedulingService;
     private final ListSchedulingsService listSchedulingsService;
     private final BookingService bookingService;
+    private final HashMap<Integer, Booking> allBookings;
+
 
     /**
      * All scehdulings for each room
@@ -45,6 +47,7 @@ public class SchedulingManager {
         HashMap<Integer, ArrayList<MovieScheduling>> _movieSchedulings;
         HashMap<Integer, MovieScheduling> _allSchedulings;
         HashMap<Integer, Integer> _bookingSchedulingMapping;
+        HashMap<Integer, Booking> _allBookings;
 
 
         // Try to load the data from files
@@ -53,16 +56,20 @@ public class SchedulingManager {
 
             _allSchedulings = (HashMap<Integer, MovieScheduling>) SerializationService.readObject("all_schedulings.txt");
             _bookingSchedulingMapping = (HashMap<Integer, Integer>) SerializationService.readObject("bookings_schedulings.txt");
+            _allBookings = (HashMap<Integer, Booking>) SerializationService.readObject("all_bookings.txt");
+
 
         } catch (Exception e) {
             _movieSchedulings = new HashMap<>();
             _allSchedulings = new HashMap<>();
             _bookingSchedulingMapping = new HashMap<>();
+            _allBookings = new HashMap<>();
         }
 
         this.movieSchedulings = _movieSchedulings;
         this.allSchedulings = _allSchedulings;
         this.bookingSchedulingMapping = _bookingSchedulingMapping;
+        this.allBookings = _allBookings;
 
         this.schedulingService = new SchedulingService(this.movieSchedulings, this.allSchedulings);
         this.listSchedulingsService = new ListSchedulingsService(this.schedulingService, this.allSchedulings);
@@ -206,7 +213,7 @@ public class SchedulingManager {
      *
      * @param schedulingId
      */
-    public RoomView getRoomForRun(int schedulingId) {
+    public Room getRoomForRun(int schedulingId) {
         return this.listSchedulingsService.getRoomForRun(schedulingId);
     }
 
@@ -258,10 +265,12 @@ public class SchedulingManager {
 
     /**
      * Buy the seats for the booking and mark it as paid
-     *
-     * @param booking
      */
-    public void buyTicket(Booking booking) throws IllegalArgumentException {
+    public void buyTicket(int bookingId) throws IllegalArgumentException {
+        Booking booking = this.allBookings.get(bookingId);
+        if (booking == null) {
+            throw new IllegalArgumentException("No booking with this id");
+        }
         this.bookingService.buyTicket(booking);
     }
 
@@ -294,5 +303,7 @@ public class SchedulingManager {
         SerializationService.writeObject(this.movieSchedulings, "movie_schedulings.txt");
         SerializationService.writeObject(this.allSchedulings, "all_schedulings.txt");
         SerializationService.writeObject(this.bookingSchedulingMapping, "bookings_schedulings.txt");
+        SerializationService.writeObject(this.allBookings, "all_bookings.txt");
+
     }
 }

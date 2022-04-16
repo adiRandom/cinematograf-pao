@@ -1,6 +1,7 @@
 package models.booking;
 
 import models.movie.Movie;
+import models.movie.Movie2DType;
 import models.movie.Movie3DType;
 import models.room.Seat;
 
@@ -27,4 +28,36 @@ public class Booking3D extends Booking2D {
     public void setWithGlasses(boolean withGlasses) {
         this.withGlasses = withGlasses;
     }
+
+    @Override
+    public int getPrice() {
+        switch (Movie3DType.valueOf(this.movie.getType())) {
+            case REGULAR: {
+                if (this.withGlasses) {
+                    return 30 * this.bookedSeats.size();
+                } else {
+                    return 27 * this.bookedSeats.size();
+
+                }
+            }
+            case MOVIE_4DX: {
+                if (this.withGlasses) {
+                    return 47 * this.bookedSeats.size();
+                } else {
+                    return 45 * this.bookedSeats.size();
+                }
+            }
+            case IMAX: {
+                if (this.withGlasses) {
+                    return 50 * this.bookedSeats.size();
+                } else {
+                    return 47 * this.bookedSeats.size();
+                }
+            }
+            default: {
+                return 0;
+            }
+        }
+    }
+
 }

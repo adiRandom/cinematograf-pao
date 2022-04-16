@@ -3,9 +3,10 @@ package models.booking;
 import models.movie.Movie;
 import models.room.Seat;
 
+import java.io.Serializable;
 import java.util.List;
 
-public interface Booking {
+public interface Booking extends Serializable {
     String getBookingDate();
 
     List<Seat> getBookingSeats();

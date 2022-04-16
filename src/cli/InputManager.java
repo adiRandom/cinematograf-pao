@@ -2,11 +2,11 @@ package cli;
 
 import lib.scheduling.SchedulingManager;
 import lib.scheduling.utils.MovieScheduling;
+import models.booking.Booking;
 import models.movie.Movie;
-import models.movie.Movie3DType;
 import models.movie.utils.MovieBuilder;
+import models.room.Room;
 import models.room.RoomType;
-import models.room.RoomView;
 import repository.MovieRepository;
 import utils.Pair;
 
@@ -29,7 +29,7 @@ public class InputManager {
 
     private void showTopLevelCommands() {
         System.out.println("1. List all movies");
-        System.out.println("2. List movies for date");
+        System.out.println("2. List movies for day");
         System.out.println("3. Book movie");
         System.out.println("4. Buy tickets");
         System.out.println("5. Cancel reservation");
@@ -65,6 +65,44 @@ public class InputManager {
         return input.equals(affirmative);
     }
 
+    /**
+     * @param withTimePrompt Whether to ask for the hour and minute
+     * @return The date from the input and a boolean if the hour was set
+     */
+    private Pair<Date, Boolean> getDateFromInput(boolean withTimePrompt) {
+        int day = getIntFromInput("What day (1-31)?");
+        // January is 0
+        int month = getIntFromInput("What month (1-12)?") - 1;
+        int year = getIntFromInput("What year?");
+
+        int hour = 0;
+        int minute = 0;
+
+        if (withTimePrompt) {
+            hour = getIntFromInput("What hour (24H)? Enter -1 to pick the time automatically");
+            if (hour != -1) {
+                minute = getIntFromInput("What minute?");
+            }
+        }
+
+        Calendar calendar = new GregorianCalendar();
+        if (hour != -1) {
+            calendar.set(year, month, day, hour, minute);
+        } else {
+            calendar.set(year, month, day);
+        }
+
+        boolean isHourSet = withTimePrompt && hour != -1;
+        return new Pair(calendar.getTime(), isHourSet);
+    }
+
+    private Pair<Integer, Integer> getPairOfIntsFromInput(String prompt) {
+        System.out.println(prompt);
+        System.out.print(">> ");
+        return new Pair<>(this.inputScanner.nextInt(), this.inputScanner.nextInt());
+    }
+
+
     private void getCommand() {
         int commandCode = this.inputScanner.nextInt();
         // Get the enum code
@@ -76,9 +114,16 @@ public class InputManager {
     private void handleCommand(Options command) {
         try {
             switch (command) {
-                //TOOD: Make it print everything
                 case LIST_MOVIES: {
                     this.handleListMovies();
+                    break;
+                }
+                case LIST_MOVIES_FOR_DATE: {
+                    this.handleListMoviesForDate();
+                    break;
+                }
+                case BOOK_MOVIE: {
+                    this.handleBookMovie();
                     break;
                 }
                 case ADD_MOVIE: {
@@ -89,7 +134,6 @@ public class InputManager {
                     this.handleAddRoom();
                     break;
                 }
-                //TODO: Fix conflict
                 case SCHEDULE_MOVIE: {
                     this.handleScheduleMovie();
                     break;
@@ -108,15 +152,27 @@ public class InputManager {
 
     }
 
-    private void handleListMovies() {
-        HashSet<Pair<Movie, MovieScheduling>> allRuns = schedulingManager.getRuns();
+    private void printMovieRuns(HashSet<Pair<Movie, MovieScheduling>> movieRuns) {
         SimpleDateFormat format = new SimpleDateFormat("dd.MM.yyyy HH:mm");
-        for (Pair<Movie, MovieScheduling> run : allRuns) {
+        for (Pair<Movie, MovieScheduling> run : movieRuns) {
             Movie movie = run.getFirst();
             MovieScheduling scheduling = run.getSecond();
             System.out.println(scheduling.getId() + ". " + movie.getTitle() + " at " + format.format(scheduling.getStartTime()));
         }
         System.out.println("------");
+    }
+
+
+    private void handleListMovies() {
+        HashSet<Pair<Movie, MovieScheduling>> allRuns = schedulingManager.getRuns();
+        printMovieRuns(allRuns);
+    }
+
+
+    private void handleListMoviesForDate() {
+        Date date = this.getDateFromInput(false).getFirst();
+        HashSet<Pair<Movie, MovieScheduling>> allRuns = schedulingManager.getRunsForDay(date);
+        printMovieRuns(allRuns);
     }
 
     private void handleAddMovie() throws IllegalArgumentException {
@@ -172,6 +228,7 @@ public class InputManager {
     private void handleScheduleMovie() throws OperationNotSupportedException {
         List<Movie> movies = movieRepository.getAll();
         for (Movie movie : movies) {
+
             System.out.println(movie.getId() + ". " + movie.getTitle());
         }
         Movie pickedMovie = null;
@@ -184,27 +241,38 @@ public class InputManager {
             int schedulingId = schedulingManager.scheduleMovie(pickedMovie);
             System.out.println("Scheduling successful. Id: " + Integer.toString(schedulingId));
         } else {
-            int day = getIntFromInput("What day (1-31)?");
-            // January is 0
-            int month = getIntFromInput("What month (1-12)?") - 1;
-            int year = getIntFromInput("What year?");
-
-            int hour = getIntFromInput("What hour (24H)? Enter -1 to pick the time automatically");
-            int minute = 0;
-            if (hour != -1) {
-                minute = getIntFromInput("What minute?");
-            }
-
-            Calendar calendar = new GregorianCalendar();
-            if (hour != -1) {
-                calendar.set(year, month, day, hour, minute);
-            } else {
-                calendar.set(year, month, day);
-            }
-
-            int schedulingId = schedulingManager.scheduleMovie(pickedMovie, calendar.getTime(), hour != -1);
+            Pair<Date, Boolean> dateFromInput = this.getDateFromInput(true);
+            int schedulingId = schedulingManager.scheduleMovie(pickedMovie,
+                    dateFromInput.getFirst(),
+                    dateFromInput.getSecond());
             System.out.println("Scheduling successful. Id: " + schedulingId);
         }
+    }
+
+    private void handleBookMovie() {
+        this.handleListMovies();
+        int schedulingId = this.getIntFromInput("Pick a movie");
+        int numberOfSeats = this.getIntFromInput("How many seats?");
+
+        String canBook = this.schedulingManager.canBook(schedulingId, numberOfSeats, false);
+        if (canBook != null) {
+            // Can book is the reason why the movie can't be booked., so print it
+            System.out.println(canBook);
+            return;
+        }
+
+        Room room = this.schedulingManager.getRoomForRun(schedulingId);
+        LinkedList<Pair<Integer, Integer>> seats = new LinkedList<>();
+
+        System.out.println(room);
+        for (int i = 0; i < numberOfSeats; i++) {
+            seats.push(this.getPairOfIntsFromInput("Pick a seat. Enter the row number and column number."));
+        }
+
+        Booking booking = this.schedulingManager.bookMovie(schedulingId, seats);
+        System.out.println("Booking successful");
+        System.out.println(booking);
+
     }
 
     public boolean getIsDone() {

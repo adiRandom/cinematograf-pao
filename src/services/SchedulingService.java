@@ -1,6 +1,7 @@
 package services;
 
 import lib.scheduling.utils.MovieScheduling;
+import models.booking.Booking;
 import models.movie.Movie;
 import models.room.RoomType;
 import models.room.RoomView;

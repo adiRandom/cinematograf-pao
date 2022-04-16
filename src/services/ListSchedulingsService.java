@@ -3,6 +3,7 @@ package services;
 import lib.scheduling.SchedulingManager;
 import lib.scheduling.utils.MovieScheduling;
 import models.movie.Movie;
+import models.room.Room;
 import models.room.RoomView;
 import repository.MovieRepository;
 import repository.RoomViewRepository;
@@ -79,7 +80,7 @@ public class ListSchedulingsService {
      *
      * @param schedulingId
      */
-    public RoomView getRoomForRun(int schedulingId) {
+    public Room getRoomForRun(int schedulingId) {
         MovieScheduling scheduling = allSchedulings.get(schedulingId);
         if (scheduling == null) {
             return null;
