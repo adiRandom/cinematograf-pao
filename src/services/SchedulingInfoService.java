@@ -1,20 +1,17 @@
 package services;
 
-import lib.scheduling.SchedulingManager;
 import lib.scheduling.utils.MovieScheduling;
+import models.booking.Booking;
 import models.movie.Movie;
 import models.room.Room;
-import models.room.RoomView;
 import repository.MovieRepository;
-import repository.RoomViewRepository;
 import utils.Pair;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 
-public class ListSchedulingsService {
+public class SchedulingInfoService {
     private MovieRepository movieRepository;
 
     private final SchedulingService schedulingService;
@@ -22,9 +19,13 @@ public class ListSchedulingsService {
      * A mapping between scheduling id and Scheduling
      */
     private final HashMap<Integer, MovieScheduling> allSchedulings;
+    private final HashMap<Integer, Booking> allBookings;
 
 
-    public ListSchedulingsService( SchedulingService schedulingService, HashMap<Integer, MovieScheduling> allSchedulings) {
+    public SchedulingInfoService(SchedulingService schedulingService,
+                                 HashMap<Integer, MovieScheduling> allSchedulings,
+                                 HashMap<Integer, Booking> allBookings) {
+        this.allBookings = allBookings;
         this.movieRepository = MovieRepository.getInstance();
         this.schedulingService = schedulingService;
         this.allSchedulings = allSchedulings;
@@ -86,5 +87,25 @@ public class ListSchedulingsService {
             return null;
         }
         return scheduling.getRoom();
+    }
+
+    public Booking getBooking(int bookingId) throws IllegalArgumentException {
+        Booking booking = this.allBookings.get(bookingId);
+        if (booking == null) {
+            throw new IllegalArgumentException("No booking with this id");
+        }
+        return booking;
+    }
+
+
+    public boolean isSchedulingFor3D(int schedulingId) {
+        MovieScheduling movieScheduling = this.allSchedulings.get(schedulingId);
+        if (movieScheduling == null) {
+            throw new IllegalArgumentException("No shceduling with this id");
+        }
+        int movieId = movieScheduling.getMovieId();
+        Movie movie = this.movieRepository.getItemWithId(movieId);
+        return movie.is3D();
+
     }
 }

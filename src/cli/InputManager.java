@@ -1,5 +1,6 @@
 package cli;
 
+import cli.utils.BookingDetails;
 import lib.scheduling.SchedulingManager;
 import lib.scheduling.utils.MovieScheduling;
 import models.booking.Booking;
@@ -125,11 +126,19 @@ public class InputManager {
                     break;
                 }
                 case BOOK_MOVIE: {
-                    this.handleCreateBooking(false);
+                    this.handleCreateBooking();
                     break;
                 }
                 case BUY_TICKET: {
                     this.handleBuyTicket();
+                    break;
+                }
+                case CANCEL_RESERVATION: {
+                    this.handleCancelReservation();
+                    break;
+                }
+                case MOVE_TICKET: {
+                    this.handleMoveReservation();
                     break;
                 }
                 case ADD_MOVIE: {
@@ -256,20 +265,22 @@ public class InputManager {
     }
 
     /**
-     * Handle picking a movie and seats to buy tickets or book them
+     * Get the scheduling id and seats for a booking
      *
-     * @param wantToBuy If this is for buying tickets
+     * @param wantToBuy True if this si for selling a ticket
      */
-    private void handleCreateBooking(boolean wantToBuy) {
+    private BookingDetails
+    getDetailsForBooking(boolean wantToBuy, Integer knownNumberOfSeats) {
         this.handleListMovies();
         int schedulingId = this.getIntFromInput("Pick a movie");
-        int numberOfSeats = this.getIntFromInput("How many seats?");
+        boolean isMovie3D = this.schedulingManager.isSchedulingFor3D(schedulingId);
+        int numberOfSeats = knownNumberOfSeats == null ? this.getIntFromInput("How many seats?") : knownNumberOfSeats;
 
         String canBook = this.schedulingManager.canBook(schedulingId, numberOfSeats, wantToBuy);
         if (canBook != null) {
             // Can book is the reason why the movie can't be booked., so print it
             System.out.println(canBook);
-            return;
+            return null;
         }
 
         Room room = this.schedulingManager.getRoomForRun(schedulingId);
@@ -280,27 +291,59 @@ public class InputManager {
             seats.push(this.getPairOfIntsFromInput("Pick a seat. Enter the row number and column number."));
         }
 
-        Booking booking;
-        if (wantToBuy) {
-            booking = this.schedulingManager.buyTicket(schedulingId, seats);
-            System.out.println("Tickets bought");
-        } else {
-            booking = this.schedulingManager.bookMovie(schedulingId, seats);
-            System.out.println("Booking successful");
+        if (isMovie3D) {
+            boolean wantGlasses = this.getBooleanFromInput("Do you want 3D glasses? Yes or No", "Yes", "No");
+            return new BookingDetails(seats, schedulingId, wantGlasses);
         }
+
+        return new BookingDetails(seats, schedulingId, false);
+    }
+
+
+    /**
+     * Handle picking a movie and seats to book tickets
+     */
+    private void handleCreateBooking() {
+        BookingDetails bookingDetails = this.getDetailsForBooking(false, null);
+
+        Booking booking = this.schedulingManager.bookMovie(bookingDetails);
+        System.out.println("Booking successful");
         System.out.println(booking);
 
     }
 
 
     private void handleBuyTicket() {
-        boolean withBooking = this.getBooleanFromInput("Do you have a booking?", "Yes", "No");
+        boolean withBooking = this.getBooleanFromInput("Do you have a booking? Yes or No", "Yes", "No");
         if (withBooking) {
             int bookingId = this.getIntFromInput("Enter booking id");
             this.schedulingManager.buyTicket(bookingId);
         } else {
-            this.handleCreateBooking(true);
+            BookingDetails bookingDetails = this.getDetailsForBooking(false, null);
+            this.schedulingManager.buyTicket(bookingDetails);
         }
+        System.out.println("Tickets bought");
+    }
+
+
+    /**
+     * Cancel booking or bought tickets
+     */
+    private void handleCancelReservation() {
+        int bookingId = this.getIntFromInput("Enter booking id");
+        this.schedulingManager.cancelBooking(bookingId);
+        System.out.println("Reservation canceled");
+    }
+
+    private void handleMoveReservation() {
+        int bookingId = this.getIntFromInput("Enter booking id");
+        Booking booking = this.schedulingManager.getBooking(bookingId);
+        // Get the details for the new booking
+        BookingDetails bookingDetails =
+                this.getDetailsForBooking(false, booking.getBookingSeats().size());
+
+        this.schedulingManager.moveTicket(bookingId, bookingDetails);
+        System.out.println("Tickets moved successfully");
     }
 
     public boolean getIsDone() {

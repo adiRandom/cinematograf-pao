@@ -1,19 +1,16 @@
 package lib.scheduling;
 
+import cli.utils.BookingDetails;
 import lib.scheduling.utils.MovieScheduling;
 import models.booking.Booking;
-import models.booking.Booking2D;
-import models.booking.Booking3D;
 import models.movie.*;
 import models.room.*;
-import repository.MovieRepository;
 import repository.RoomViewRepository;
 import services.*;
 import utils.Pair;
 
 import javax.naming.OperationNotSupportedException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class SchedulingManager {
     private RoomViewRepository roomViewRepository;
@@ -21,7 +18,7 @@ public class SchedulingManager {
     private final IdService idService;
 
     private final SchedulingService schedulingService;
-    private final ListSchedulingsService listSchedulingsService;
+    private final SchedulingInfoService schedulingInfoService;
     private final BookingService bookingService;
     private final HashMap<Integer, Booking> allBookings;
 
@@ -72,8 +69,8 @@ public class SchedulingManager {
         this.allBookings = _allBookings;
 
         this.schedulingService = new SchedulingService(this.movieSchedulings, this.allSchedulings);
-        this.listSchedulingsService = new ListSchedulingsService(this.schedulingService, this.allSchedulings);
-        this.bookingService = new BookingService(this.allSchedulings, this.bookingSchedulingMapping);
+        this.schedulingInfoService = new SchedulingInfoService(this.schedulingService, this.allSchedulings, allBookings);
+        this.bookingService = new BookingService(this.allSchedulings, this.bookingSchedulingMapping, allBookings);
     }
 
     public static SchedulingManager getInstance() {
@@ -196,7 +193,7 @@ public class SchedulingManager {
      * @return All the movies and the scheduling info
      */
     public HashSet<Pair<Movie, MovieScheduling>> getRunsForDay(Date date) {
-        return this.listSchedulingsService.getRunsForDay(date);
+        return this.schedulingInfoService.getRunsForDay(date);
     }
 
     /**
@@ -205,7 +202,7 @@ public class SchedulingManager {
      * @return All the movies and the scheduling info
      */
     public HashSet<Pair<Movie, MovieScheduling>> getRuns() {
-        return this.listSchedulingsService.getRuns();
+        return this.schedulingInfoService.getRuns();
     }
 
     /**
@@ -214,7 +211,7 @@ public class SchedulingManager {
      * @param schedulingId
      */
     public Room getRoomForRun(int schedulingId) {
-        return this.listSchedulingsService.getRoomForRun(schedulingId);
+        return this.schedulingInfoService.getRoomForRun(schedulingId);
     }
 
     public void stopBooking(int schedulingId) {
@@ -233,45 +230,39 @@ public class SchedulingManager {
     }
 
 
-    // TODO: Check in the input class for this scheduling to have enough seats
-    // TODO: Check in the input if you can book this scheduling
-    public Booking bookMovie(int schedulingId, List<Pair<Integer, Integer>> seats) throws IllegalArgumentException {
-        return this.bookingService.bookMovie(schedulingId, seats);
+    public Booking bookMovie(BookingDetails  bookingDetails) throws IllegalArgumentException {
+        return this.bookingService.bookMovie(bookingDetails);
     }
 
-    public void cancelBooking(Booking booking) throws IllegalArgumentException {
+    public void cancelBooking(int bookingId) throws IllegalArgumentException {
+        Booking booking = this.allBookings.get(bookingId);
+        if (booking == null) {
+            throw new IllegalArgumentException("No booking with this id");
+        }
         this.bookingService.cancelBooking(booking);
     }
 
-    // TODO: Check in the input class for this scheduling to have enough seats
-    // TODO: Check in the input if you can book this scheduling
-    public Booking moveTicket(Booking booking, int newSchedulingId, List<Pair<Integer, Integer>> newSeats) throws IllegalArgumentException {
-        return this.bookingService.moveTicket(booking, newSchedulingId, newSeats);
+    public Booking moveTicket(int bookingId, BookingDetails newBookingDetails)
+            throws IllegalArgumentException {
+        return this.bookingService.moveTicket(this.getBooking(bookingId), newBookingDetails);
     }
 
 
     /**
      * Buy tickets and return a paid booking
      *
-     * @param schedulingId
-     * @param seats
      * @return
      */
-    public Booking buyTicket(int schedulingId, List<Pair<Integer, Integer>> seats) throws IllegalArgumentException {
-        return this.bookingService.buyTicket(schedulingId, seats);
+    public Booking buyTicket(BookingDetails bookingDetails) throws IllegalArgumentException {
+        return this.bookingService.buyTicket(bookingDetails);
     }
 
-    //TODO: Handle exception
 
     /**
      * Buy the seats for the booking and mark it as paid
      */
     public void buyTicket(int bookingId) throws IllegalArgumentException {
-        Booking booking = this.allBookings.get(bookingId);
-        if (booking == null) {
-            throw new IllegalArgumentException("No booking with this id");
-        }
-        this.bookingService.buyTicket(booking);
+        this.bookingService.buyTicket(this.getBooking(bookingId));
     }
 
 
@@ -304,6 +295,14 @@ public class SchedulingManager {
         SerializationService.writeObject(this.allSchedulings, "all_schedulings.txt");
         SerializationService.writeObject(this.bookingSchedulingMapping, "bookings_schedulings.txt");
         SerializationService.writeObject(this.allBookings, "all_bookings.txt");
-
     }
+
+    public Booking getBooking(int bookingId) {
+        return this.schedulingInfoService.getBooking(bookingId);
+    }
+
+    public boolean isSchedulingFor3D(int schedulingId) {
+        return this.schedulingInfoService.isSchedulingFor3D(schedulingId);
+    }
+
 }

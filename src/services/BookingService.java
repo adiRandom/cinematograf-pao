@@ -1,6 +1,6 @@
 package services;
 
-import lib.scheduling.SchedulingManager;
+import cli.utils.BookingDetails;
 import lib.scheduling.utils.MovieScheduling;
 import models.booking.Booking;
 import models.booking.Booking2D;
@@ -10,10 +10,8 @@ import models.room.Room;
 import models.room.Seat;
 import models.room.SeatType;
 import repository.MovieRepository;
-import repository.RoomViewRepository;
 import utils.Pair;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -31,15 +29,19 @@ public class BookingService {
      */
     private final HashMap<Integer, Integer> bookingSchedulingMapping;
     private MovieRepository movieRepository;
+    private final HashMap<Integer, Booking> allBookings;
 
 
-    public BookingService(HashMap<Integer, MovieScheduling> allSchedulings, HashMap<Integer, Integer> bookingSchedulingMapping) {
+    public BookingService(HashMap<Integer, MovieScheduling> allSchedulings,
+                          HashMap<Integer, Integer> bookingSchedulingMapping,
+                          HashMap<Integer, Booking> allBookings) {
         this.allSchedulings = allSchedulings;
+        this.allBookings = allBookings;
         this.movieRepository = MovieRepository.getInstance();
         this.bookingSchedulingMapping = bookingSchedulingMapping;
     }
 
-    private Booking buildBooking(MovieScheduling scheduling, List<Pair<Integer, Integer>> seats, boolean isPaid) {
+    private Booking buildBooking(MovieScheduling scheduling, List<Pair<Integer, Integer>> seats, boolean isPaid, boolean with3DGlasses) {
         Booking booking;
         Movie movie = this.movieRepository.getItemWithId(scheduling.getMovieId());
 
@@ -55,13 +57,13 @@ public class BookingService {
                 .collect(Collectors.toCollection(LinkedList::new));
 
         if (movie.is3D()) {
-            booking = new Booking3D(bookedSeats, scheduling.getRoom().getId(), scheduling.getStartTime(), movie, isPaid, false);
+            booking = new Booking3D(bookedSeats, scheduling.getRoom().getId(), scheduling.getStartTime(), movie, isPaid, with3DGlasses);
         } else {
             booking = new Booking2D(bookedSeats, scheduling.getRoom().getId(), scheduling.getStartTime(), movie, isPaid);
         }
 
         this.bookingSchedulingMapping.put(booking.getBookingId(), scheduling.getId());
-
+        this.allBookings.put(booking.getBookingId(), booking);
         return booking;
     }
 
@@ -102,11 +104,8 @@ public class BookingService {
 
     }
 
-
-    // TODO: Check in the input class for this scheduling to have enough seats
-    // TODO: Check in the input if you can book this scheduling
-    public Booking bookMovie(int schedulingId, List<Pair<Integer, Integer>> seats) throws IllegalArgumentException {
-        MovieScheduling scheduling = allSchedulings.get(schedulingId);
+    public Booking bookMovie(BookingDetails bookingDetails) throws IllegalArgumentException {
+        MovieScheduling scheduling = allSchedulings.get(bookingDetails.getSchedulingId());
         if (scheduling == null) {
             throw new IllegalArgumentException("No shceduling wiht this id");
         }
@@ -116,11 +115,11 @@ public class BookingService {
         }
 
         // Book the specified seats
-        for (Pair<Integer, Integer> seat : seats) {
+        for (Pair<Integer, Integer> seat : bookingDetails.getSeats()) {
             scheduling.getRoom().bookSeat(seat.getFirst(), seat.getSecond());
         }
 
-        return this.buildBooking(scheduling, seats, false);
+        return this.buildBooking(scheduling, bookingDetails.getSeats(), false, bookingDetails.isWith3DGlasses());
     }
 
     public void cancelBooking(Booking booking) throws IllegalArgumentException {
@@ -142,36 +141,43 @@ public class BookingService {
 
         //Remove the current booking
         this.bookingSchedulingMapping.remove(booking.getBookingId());
+        this.allBookings.remove(booking.getBookingId());
     }
 
-    // TODO: Check in the input class for this scheduling to have enough seats
-    // TODO: Check in the input if you can book this scheduling
-    public Booking moveTicket(Booking booking, int newSchedulingId, List<Pair<Integer, Integer>> newSeats) throws IllegalArgumentException {
+    public Booking moveTicket(Booking booking, BookingDetails newBookingDetails) throws IllegalArgumentException {
+        // Check if the user is moving the booking to the same movie
+        MovieScheduling movieScheduling = this.allSchedulings.get(newBookingDetails.getSchedulingId());
+
+        if (booking.getMovie().getId() != movieScheduling.getMovieId()) {
+            throw new IllegalArgumentException("You must move the reservation to the same movie");
+        }
         this.cancelBooking(booking);
         // Create a new booking
-        return this.bookMovie(newSchedulingId, newSeats);
+        if (booking.isPaid()) {
+            return this.buyTicket(newBookingDetails);
+        } else {
+            return this.bookMovie(newBookingDetails);
+        }
     }
 
 
     /**
      * Buy tickets and return a paid booking
      *
-     * @param schedulingId
-     * @param seats
      * @return
      */
-    public Booking buyTicket(int schedulingId, List<Pair<Integer, Integer>> seats) throws IllegalArgumentException {
-        MovieScheduling scheduling = allSchedulings.get(schedulingId);
+    public Booking buyTicket(BookingDetails bookingDetails) throws IllegalArgumentException {
+        MovieScheduling scheduling = allSchedulings.get(bookingDetails.getSchedulingId());
         if (scheduling == null) {
             throw new IllegalArgumentException("No shceduling wiht this id");
         }
 
         // Book the specified seats
-        for (Pair<Integer, Integer> seat : seats) {
+        for (Pair<Integer, Integer> seat : bookingDetails.getSeats()) {
             scheduling.getRoom().buySeat(seat.getFirst(), seat.getSecond());
         }
 
-        return this.buildBooking(scheduling, seats, true);
+        return this.buildBooking(scheduling, bookingDetails.getSeats(), true, bookingDetails.isWith3DGlasses());
     }
 
 
