@@ -4,7 +4,6 @@ import repository.MovieRepository;
 import repository.RoomViewRepository;
 import services.IdService;
 
-// TODO: Fix static variable preservation
 public class Application {
     public static void main(String[] args) {
         IdService idService = IdService.getInstance();
