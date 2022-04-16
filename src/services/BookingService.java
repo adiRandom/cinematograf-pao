@@ -174,7 +174,6 @@ public class BookingService {
         return this.buildBooking(scheduling, seats, true);
     }
 
-    //TODO: Handle exception
 
     /**
      * Buy the seats for the booking and mark it as paid

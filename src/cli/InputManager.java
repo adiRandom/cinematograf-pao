@@ -14,6 +14,8 @@ import javax.naming.OperationNotSupportedException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+
+// TODO: break into handler class
 public class InputManager {
     private boolean isDone;
     private Scanner inputScanner;
@@ -123,7 +125,11 @@ public class InputManager {
                     break;
                 }
                 case BOOK_MOVIE: {
-                    this.handleBookMovie();
+                    this.handleCreateBooking(false);
+                    break;
+                }
+                case BUY_TICKET: {
+                    this.handleBuyTicket();
                     break;
                 }
                 case ADD_MOVIE: {
@@ -249,12 +255,17 @@ public class InputManager {
         }
     }
 
-    private void handleBookMovie() {
+    /**
+     * Handle picking a movie and seats to buy tickets or book them
+     *
+     * @param wantToBuy If this is for buying tickets
+     */
+    private void handleCreateBooking(boolean wantToBuy) {
         this.handleListMovies();
         int schedulingId = this.getIntFromInput("Pick a movie");
         int numberOfSeats = this.getIntFromInput("How many seats?");
 
-        String canBook = this.schedulingManager.canBook(schedulingId, numberOfSeats, false);
+        String canBook = this.schedulingManager.canBook(schedulingId, numberOfSeats, wantToBuy);
         if (canBook != null) {
             // Can book is the reason why the movie can't be booked., so print it
             System.out.println(canBook);
@@ -269,10 +280,27 @@ public class InputManager {
             seats.push(this.getPairOfIntsFromInput("Pick a seat. Enter the row number and column number."));
         }
 
-        Booking booking = this.schedulingManager.bookMovie(schedulingId, seats);
-        System.out.println("Booking successful");
+        Booking booking;
+        if (wantToBuy) {
+            booking = this.schedulingManager.buyTicket(schedulingId, seats);
+            System.out.println("Tickets bought");
+        } else {
+            booking = this.schedulingManager.bookMovie(schedulingId, seats);
+            System.out.println("Booking successful");
+        }
         System.out.println(booking);
 
+    }
+
+
+    private void handleBuyTicket() {
+        boolean withBooking = this.getBooleanFromInput("Do you have a booking?", "Yes", "No");
+        if (withBooking) {
+            int bookingId = this.getIntFromInput("Enter booking id");
+            this.schedulingManager.buyTicket(bookingId);
+        } else {
+            this.handleCreateBooking(true);
+        }
     }
 
     public boolean getIsDone() {
