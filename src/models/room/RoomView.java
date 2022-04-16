@@ -108,4 +108,28 @@ public class RoomView implements Serializable {
     public int getColumns() {
         return columns;
     }
+    @Override
+    public String toString() {
+        StringBuilder stringBuilder = new StringBuilder();
+        for (ArrayList<Seat> row : this.seats) {
+            for (Seat seat : row) {
+                switch (seat.getType()) {
+                    case AVAILABLE: {
+                        stringBuilder.append("_");
+                        break;
+                    }
+                    case BOOKED:
+                    case SOLD: {
+                        stringBuilder.append("X");
+                        break;
+                    }
+                    case NON_EXISTENT: {
+                        stringBuilder.append(" ");
+                    }
+                }
+            }
+            stringBuilder.append("\n");
+        }
+        return stringBuilder.toString();
+    }
 }

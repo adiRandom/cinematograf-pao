@@ -65,5 +65,8 @@ public abstract class BaseRepository<T extends Serializable> implements Reposito
         return new ArrayList<>(this.repo.values());
     }
 
-
+    @Override
+    public void deleteItem(int id) {
+        this.repo.remove(id);
+    }
 }

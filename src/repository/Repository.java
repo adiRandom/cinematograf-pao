@@ -9,5 +9,6 @@ public interface Repository<T> {
     public T where(Predicate<T> predicate);
     public List<T> whereAll(Predicate<T> predicate);
     public List<T> getAll();
+    public void deleteItem(int id);
 
 }

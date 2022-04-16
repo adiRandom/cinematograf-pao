@@ -8,7 +8,9 @@ import models.movie.Movie;
 import models.movie.utils.MovieBuilder;
 import models.room.Room;
 import models.room.RoomType;
+import models.room.RoomView;
 import repository.MovieRepository;
+import repository.RoomViewRepository;
 import utils.Pair;
 
 import javax.naming.OperationNotSupportedException;
@@ -22,12 +24,14 @@ public class InputManager {
     private Scanner inputScanner;
     private SchedulingManager schedulingManager;
     private MovieRepository movieRepository;
+    private RoomViewRepository roomViewRepository;
 
     public InputManager() {
         this.inputScanner = new Scanner(System.in);
         this.isDone = false;
         schedulingManager = SchedulingManager.getInstance();
         this.movieRepository = MovieRepository.getInstance();
+        this.roomViewRepository = RoomViewRepository.getInstance();
     }
 
     private void showTopLevelCommands() {
@@ -159,6 +163,14 @@ public class InputManager {
                 }
                 case STOP_BOOKING: {
                     this.handleStopBooking();
+                    break;
+                }
+                case DELETE_ROOM: {
+                    this.handleRemoveRoom();
+                    break;
+                }
+                case EDIT_ROOM: {
+                    this.handleEditRoom();
                     break;
                 }
                 case EXIT: {
@@ -355,11 +367,8 @@ public class InputManager {
     }
 
     private void handlePrintMovieDetails() {
-        HashSet<Pair<Movie, MovieScheduling>> allRuns = schedulingManager.getRuns();
-        SimpleDateFormat format = new SimpleDateFormat("dd.MM.yyyy HH:mm");
-        for (Pair<Movie, MovieScheduling> run : allRuns) {
-            Movie movie = run.getFirst();
-            MovieScheduling scheduling = run.getSecond();
+        List<Movie> movies = this.movieRepository.getAll();
+        for (Movie movie : movies) {
             System.out.println(movie.getId() + ". " + movie.getTitle());
         }
         System.out.println("------");
@@ -380,6 +389,48 @@ public class InputManager {
         System.out.println("Stopped booking for scheduling with id" + schedulingId);
     }
 
+    public void handleEditRoom() {
+        List<RoomView> rooms = this.roomViewRepository.getAll();
+
+        for (RoomView roomView : rooms) {
+            System.out.println("Room " + roomView.getId());
+        }
+        System.out.println("--------");
+
+        int roomId = this.getIntFromInput("Pick a room to edit with its number");
+        RoomView roomView = rooms.get(roomId);
+
+        if (roomView == null) {
+            throw new IllegalArgumentException("No room with that number");
+        }
+
+        int editCount = this.getIntFromInput("How many seats do you want to edit?");
+
+        System.out.println(roomView);
+
+        for (int i = 0; i < editCount; i++) {
+            Pair<Integer, Integer> seat = this.getPairOfIntsFromInput("Pick a sit to add or remove. Type the row number and column number");
+            this.schedulingManager.toggleSeat(roomId, seat.getFirst(), seat.getSecond());
+        }
+
+        System.out.println("Room edited. All following movie schedulings will use the new layout");
+    }
+
+    public void handleRemoveRoom() {
+        List<RoomView> rooms = this.roomViewRepository.getAll();
+
+        for (RoomView roomView : rooms) {
+            System.out.println("Room " + roomView.getId());
+        }
+        System.out.println("--------");
+
+        int roomId = this.getIntFromInput("Pick a room to edit with its number");
+
+        this.roomViewRepository.deleteItem(roomId);
+        System.out.println("Room removed.");
+
+    }
+
     public boolean getIsDone() {
         return this.isDone;
     }
@@ -388,5 +439,6 @@ public class InputManager {
         this.showTopLevelCommands();
         this.getCommand();
     }
+
 
 }
