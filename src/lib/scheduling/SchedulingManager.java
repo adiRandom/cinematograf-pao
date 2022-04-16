@@ -271,7 +271,6 @@ public class SchedulingManager {
         this.roomViewRepository.insertItem(roomView.getId(), roomView);
     }
 
-    //TODO: test that seat toggling doesn't affect rooms in schedulings
 
     /**
      * Add or remove seat for a room at a position

@@ -25,7 +25,6 @@ public enum Options {
     STOP_BOOKING,
     GET_MOVIE_DETAILS,
     EXIT;
-//    TODO: Implement start movie to prevent buying as well
 
     public static Options getOptionForCode(int code) {
         switch (code) {
