@@ -118,7 +118,7 @@ public class InputManager {
         try {
             switch (command) {
                 case LIST_MOVIES: {
-                    this.handleListMovies();
+                    this.handleListMovieRuns();
                     break;
                 }
                 case LIST_MOVIES_FOR_DATE: {
@@ -153,6 +153,14 @@ public class InputManager {
                     this.handleScheduleMovie();
                     break;
                 }
+                case GET_MOVIE_DETAILS: {
+                    this.handlePrintMovieDetails();
+                    break;
+                }
+                case STOP_BOOKING: {
+                    this.handleStopBooking();
+                    break;
+                }
                 case EXIT: {
                     this.isDone = true;
                     break;
@@ -178,7 +186,7 @@ public class InputManager {
     }
 
 
-    private void handleListMovies() {
+    private void handleListMovieRuns() {
         HashSet<Pair<Movie, MovieScheduling>> allRuns = schedulingManager.getRuns();
         printMovieRuns(allRuns);
     }
@@ -271,7 +279,7 @@ public class InputManager {
      */
     private BookingDetails
     getDetailsForBooking(boolean wantToBuy, Integer knownNumberOfSeats) {
-        this.handleListMovies();
+        this.handleListMovieRuns();
         int schedulingId = this.getIntFromInput("Pick a movie");
         boolean isMovie3D = this.schedulingManager.isSchedulingFor3D(schedulingId);
         int numberOfSeats = knownNumberOfSeats == null ? this.getIntFromInput("How many seats?") : knownNumberOfSeats;
@@ -344,6 +352,32 @@ public class InputManager {
 
         this.schedulingManager.moveTicket(bookingId, bookingDetails);
         System.out.println("Tickets moved successfully");
+    }
+
+    private void handlePrintMovieDetails() {
+        HashSet<Pair<Movie, MovieScheduling>> allRuns = schedulingManager.getRuns();
+        SimpleDateFormat format = new SimpleDateFormat("dd.MM.yyyy HH:mm");
+        for (Pair<Movie, MovieScheduling> run : allRuns) {
+            Movie movie = run.getFirst();
+            MovieScheduling scheduling = run.getSecond();
+            System.out.println(movie.getId() + ". " + movie.getTitle());
+        }
+        System.out.println("------");
+        int movieId = this.getIntFromInput("Pick a movie");
+
+        Movie movie = this.movieRepository.getItemWithId(movieId);
+        if (movie == null) {
+            throw new IllegalArgumentException("No movie with that id");
+        }
+
+        System.out.println(movie);
+    }
+
+    public void handleStopBooking() {
+        this.handleListMovieRuns();
+        int schedulingId = this.getIntFromInput("Pick a scheduling");
+        this.schedulingManager.stopBooking(schedulingId);
+        System.out.println("Stopped booking for scheduling with id" + schedulingId);
     }
 
     public boolean getIsDone() {
