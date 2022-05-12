@@ -1,11 +1,14 @@
 package cli.handlers;
 
 import models.movie.Movie;
+import services.CSVService;
 
 import javax.naming.OperationNotSupportedException;
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
-public class PrintMovieDetailsHandler extends AbstractCommandHandler{
+public class PrintMovieDetailsHandler extends AbstractCommandHandler {
     @Override
     public void handleCommand() throws OperationNotSupportedException {
         List<Movie> movies = this.movieRepository.getAll();
@@ -21,5 +24,11 @@ public class PrintMovieDetailsHandler extends AbstractCommandHandler{
         }
 
         System.out.println(movie);
+        CSVService csvService = new CSVService<Movie>(movie.getTitle() + ".csv");
+        try {
+            csvService.write(Arrays.asList(movie), new String[]{"starActors","idService"});
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

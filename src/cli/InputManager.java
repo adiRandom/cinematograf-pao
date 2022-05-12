@@ -72,10 +72,13 @@ public class InputManager {
         try {
             switch (command) {
                 case LIST_MOVIES: {
+                    // This prints a report as well
                     this.listAllMovieRunsHandler.handleCommand();
                     break;
                 }
                 case LIST_MOVIES_FOR_DATE: {
+                    // This prints a report as well
+
                     this.listMoviesForDayHandler.handleCommand();
                     break;
                 }
@@ -108,6 +111,7 @@ public class InputManager {
                     break;
                 }
                 case GET_MOVIE_DETAILS: {
+                    // This prints a report as well
                     this.printMovieDetailsHandler.handleCommand();
                     break;
                 }
@@ -136,8 +140,6 @@ public class InputManager {
         }
 
     }
-
-
 
 
     public boolean getIsDone() {

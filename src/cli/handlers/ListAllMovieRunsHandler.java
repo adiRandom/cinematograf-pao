@@ -11,6 +11,6 @@ public class ListAllMovieRunsHandler extends AbstractCommandHandler{
     @Override
     public void handleCommand() {
         HashSet<Pair<Movie, MovieScheduling>> allRuns = schedulingManager.getRuns();
-        CommandHandlerUtils.printMovieRuns(allRuns);
+        CommandHandlerUtils.printMovieRuns(allRuns,"all-movoies.csv");
     }
 }
